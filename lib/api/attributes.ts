@@ -9,6 +9,9 @@ export interface AttributeValueOption {
   image?: string | null;
   image_relative?: string | null;
   remove_image?: boolean;
+  meta_title?: string | null;
+  meta_description?: string | null;
+  is_active?: boolean;
 }
 
 export interface Attribute {
@@ -31,6 +34,9 @@ export interface CreateOrUpdateAttributePayload {
     image?: string | null;
     image_relative?: string | null;
     remove_image?: boolean;
+    meta_title?: string | null;
+    meta_description?: string | null;
+    is_active?: boolean;
   }> | null;
   is_active: boolean;
   is_default_specification?: boolean;

@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/Input";
 import { Label } from "@/components/ui/Label";
 import { Select } from "@/components/ui/Select";
 import { Button } from "@/components/ui/Button";
+import { Textarea } from "@/components/ui/Textarea";
 import { 
   ArrowLeft,
   Plus, 
@@ -19,7 +20,8 @@ import {
   Tag,
   Image as ImageIcon,
   Trash2,
-  Info
+  Info,
+  Globe
 } from "lucide-react";
 import { 
   createAttribute
@@ -29,6 +31,10 @@ interface OptionItemState {
   value: string;
   file?: File | null;
   previewUrl?: string | null;
+  meta_title?: string;
+  meta_description?: string;
+  is_active?: boolean;
+  showSeo?: boolean;
 }
 
 export default function AddAttributeClient() {
@@ -56,7 +62,7 @@ export default function AddAttributeClient() {
   const handleAddOption = () => {
     const trimmed = valueInput.trim();
     if (!trimmed) return;
-    setOptions(prev => [...prev, { value: trimmed }]);
+    setOptions(prev => [...prev, { value: trimmed, is_active: true }]);
     setValueInput("");
   };
 
@@ -66,6 +72,22 @@ export default function AddAttributeClient() {
 
   const handleRemoveOption = (index: number) => {
     setOptions(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const toggleSeoPanel = (index: number) => {
+    setOptions(prev => prev.map((opt, i) => i === index ? { ...opt, showSeo: !opt.showSeo } : opt));
+  };
+
+  const handleUpdateMetaTitle = (index: number, title: string) => {
+    setOptions(prev => prev.map((opt, i) => i === index ? { ...opt, meta_title: title } : opt));
+  };
+
+  const handleUpdateMetaDescription = (index: number, desc: string) => {
+    setOptions(prev => prev.map((opt, i) => i === index ? { ...opt, meta_description: desc } : opt));
+  };
+
+  const handleUpdateOptionStatus = (index: number, isActive: boolean) => {
+    setOptions(prev => prev.map((opt, i) => i === index ? { ...opt, is_active: isActive } : opt));
   };
 
   const handleOptionImageChange = (index: number, file: File | null) => {
@@ -122,6 +144,9 @@ export default function AddAttributeClient() {
     if (type !== "text" && type !== "rich_text") {
       const valuesMeta = validOptions.map((opt) => ({
         value: opt.value.trim(),
+        meta_title: opt.meta_title ? opt.meta_title.trim() : null,
+        meta_description: opt.meta_description ? opt.meta_description.trim() : null,
+        is_active: opt.is_active ?? true,
       }));
 
       formData.append("values", JSON.stringify(valuesMeta));
@@ -219,11 +244,11 @@ export default function AddAttributeClient() {
       </div>
 
       {/* Main Two-Card Layout */}
-      <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         
         {/* Left Card: Attribute Details */}
         <div className="lg:col-span-6 xl:col-span-5">
-          <Card className="overflow-hidden shadow-sm border border-slate-200/80 bg-white h-full">
+          <Card className="overflow-hidden shadow-sm border border-slate-200/80 bg-white">
             <CardHeader className="flex flex-row items-center gap-3 py-4 px-6 bg-slate-50/50 border-b border-slate-100">
               <div className="w-9 h-9 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600 font-bold">
                 <Sliders size={18} />
@@ -305,7 +330,7 @@ export default function AddAttributeClient() {
 
         {/* Right Card: Attribute Values & Swatches */}
         <div className="lg:col-span-6 xl:col-span-7">
-          <Card className="overflow-hidden shadow-sm border border-slate-200/80 bg-white h-full flex flex-col justify-between">
+          <Card className="overflow-hidden shadow-sm border border-slate-200/80 bg-white flex flex-col justify-between">
             <div>
               <CardHeader className="flex flex-row items-center justify-between py-4 px-6 bg-slate-50/50 border-b border-slate-100">
                 <div className="flex items-center gap-3">
@@ -373,72 +398,148 @@ export default function AddAttributeClient() {
                         <p className="text-[11px] text-slate-400 mt-0.5">Add values above to define available choices for this attribute.</p>
                       </div>
                     ) : (
-                      <div className="space-y-2.5 max-h-[380px] overflow-y-auto pr-1">
-                        {options.map((opt, index) => (
-                          <div 
-                            key={index} 
-                            className="flex items-center gap-3 p-2.5 rounded-xl border border-slate-200/80 bg-slate-50/50 hover:bg-slate-50 transition-colors group"
-                          >
-                            {/* Swatch Image Picker */}
-                            <div className="relative flex-shrink-0">
-                              <input 
-                                type="file" 
-                                id={`opt-img-add-${index}`}
-                                accept="image/*"
-                                onChange={(e) => {
-                                  if (e.target.files && e.target.files[0]) {
-                                    handleOptionImageChange(index, e.target.files[0]);
-                                  }
-                                }}
-                                className="hidden"
-                              />
-                              {opt.previewUrl ? (
-                                <div className="relative w-9 h-9 rounded-lg overflow-hidden border border-slate-200 group/img bg-white shadow-xs">
-                                  <img 
-                                    src={opt.previewUrl} 
-                                    alt={opt.value} 
-                                    className="w-full h-full object-cover" 
+                      <div className="space-y-3">
+                        {options.map((opt, index) => {
+                          const hasSeoData = !!(opt.meta_title?.trim() || opt.meta_description?.trim());
+                          return (
+                            <div 
+                              key={index} 
+                              className="p-3 rounded-xl border border-slate-200/80 bg-slate-50/50 hover:bg-slate-50 transition-all space-y-2.5 group"
+                            >
+                              <div className="flex items-center gap-3">
+                                {/* Swatch Image Picker */}
+                                <div className="relative flex-shrink-0">
+                                  <input 
+                                    type="file" 
+                                    id={`opt-img-add-${index}`}
+                                    accept="image/*"
+                                    onChange={(e) => {
+                                      if (e.target.files && e.target.files[0]) {
+                                        handleOptionImageChange(index, e.target.files[0]);
+                                      }
+                                    }}
+                                    className="hidden"
                                   />
-                                  <button
-                                    type="button"
-                                    onClick={() => handleRemoveOptionImage(index)}
-                                    title="Remove image"
-                                    className="absolute inset-0 bg-slate-900/60 opacity-0 group-hover/img:opacity-100 flex items-center justify-center text-white transition-opacity cursor-pointer"
-                                  >
-                                    <X size={13} />
-                                  </button>
+                                  {opt.previewUrl ? (
+                                    <div className="relative w-9 h-9 rounded-lg overflow-hidden border border-slate-200 group/img bg-white shadow-xs">
+                                      <img 
+                                        src={opt.previewUrl} 
+                                        alt={opt.value} 
+                                        className="w-full h-full object-cover" 
+                                      />
+                                      <button
+                                        type="button"
+                                        onClick={() => handleRemoveOptionImage(index)}
+                                        title="Remove image"
+                                        className="absolute inset-0 bg-slate-900/60 opacity-0 group-hover/img:opacity-100 flex items-center justify-center text-white transition-opacity cursor-pointer"
+                                      >
+                                        <X size={13} />
+                                      </button>
+                                    </div>
+                                  ) : (
+                                    <label 
+                                      htmlFor={`opt-img-add-${index}`}
+                                      title="Upload optional swatch image"
+                                      className="w-9 h-9 rounded-lg border border-dashed border-slate-300 bg-white hover:bg-indigo-50/50 hover:border-indigo-300 flex items-center justify-center text-slate-400 hover:text-indigo-600 transition-colors cursor-pointer"
+                                    >
+                                      <ImageIcon size={16} />
+                                    </label>
+                                  )}
                                 </div>
-                              ) : (
-                                <label 
-                                  htmlFor={`opt-img-add-${index}`}
-                                  title="Upload optional swatch image"
-                                  className="w-9 h-9 rounded-lg border border-dashed border-slate-300 bg-white hover:bg-indigo-50/50 hover:border-indigo-300 flex items-center justify-center text-slate-400 hover:text-indigo-600 transition-colors cursor-pointer"
+
+                                {/* Option Text Input */}
+                                <Input
+                                  type="text"
+                                  value={opt.value}
+                                  placeholder="Option value"
+                                  onChange={(e) => handleUpdateOptionText(index, e.target.value)}
+                                  className="h-9 text-xs bg-white rounded-xl border-slate-200 flex-1"
+                                />
+
+                                {/* SEO Toggle Button */}
+                                <button
+                                  type="button"
+                                  onClick={() => toggleSeoPanel(index)}
+                                  className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium border transition-colors cursor-pointer ${
+                                    opt.showSeo 
+                                      ? 'bg-indigo-50 border-indigo-200 text-indigo-700' 
+                                      : hasSeoData 
+                                        ? 'bg-emerald-50 border-emerald-200 text-emerald-700' 
+                                        : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-100'
+                                  }`}
+                                  title="Add optional SEO Meta Title & Meta Description"
                                 >
-                                  <ImageIcon size={16} />
-                                </label>
+                                  <Globe size={13} />
+                                  <span>SEO</span>
+                                  {hasSeoData && (
+                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 ml-0.5"></span>
+                                  )}
+                                </button>
+
+                                {/* Delete Button */}
+                                <button
+                                  type="button"
+                                  onClick={() => handleRemoveOption(index)}
+                                  className="w-8 h-8 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 flex items-center justify-center transition-colors cursor-pointer"
+                                  title="Delete option"
+                                >
+                                  <Trash2 size={15} />
+                                </button>
+                              </div>
+
+                              {/* Expandable SEO Collapsible Panel */}
+                              {opt.showSeo && (
+                                <div className="mt-2 p-3 bg-white rounded-xl border border-slate-200/90 shadow-xs space-y-2.5 animate-in slide-in-from-top-2 duration-200">
+                                  <div className="flex items-center justify-between border-b border-slate-100 pb-1.5">
+                                    <p className="text-[11px] font-bold text-slate-700 uppercase flex items-center gap-1.5">
+                                      <Globe size={13} className="text-indigo-500" /> SEO Metadata (Optional)
+                                    </p>
+                                    <span className="text-[10px] text-slate-400">Search Engine Meta Tags</span>
+                                  </div>
+
+                                  <div className="space-y-3">
+                                    {/* Row 1: Meta Title + Status */}
+                                    <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
+                                      <div className="md:col-span-8 space-y-1">
+                                        <Label className="text-[11px] font-bold text-slate-500">Meta Title</Label>
+                                        <Input 
+                                          type="text" 
+                                          placeholder="Meta title (e.g. Red Shade Lipstick)"
+                                          value={opt.meta_title || ""}
+                                          onChange={(e) => handleUpdateMetaTitle(index, e.target.value)}
+                                          className="h-9 text-xs bg-slate-50/50 rounded-lg border-slate-200"
+                                        />
+                                      </div>
+                                      <div className="md:col-span-4 space-y-1">
+                                        <Label className="text-[11px] font-bold text-slate-500">Status</Label>
+                                        <Select 
+                                          value={opt.is_active ?? true ? "active" : "inactive"}
+                                          onChange={(e) => handleUpdateOptionStatus(index, e.target.value === "active")}
+                                          className="h-9 text-xs bg-slate-50/50 rounded-lg border-slate-200 text-slate-700"
+                                        >
+                                          <option value="active">Active</option>
+                                          <option value="inactive">Inactive</option>
+                                        </Select>
+                                      </div>
+                                    </div>
+
+                                    {/* Row 2: Meta Description Full Width */}
+                                    <div className="space-y-1 w-full">
+                                      <Label className="text-[11px] font-bold text-slate-500">Meta Description</Label>
+                                      <Textarea 
+                                        rows={2}
+                                        placeholder="Brief description for search engines..."
+                                        value={opt.meta_description || ""}
+                                        onChange={(e) => handleUpdateMetaDescription(index, e.target.value)}
+                                        className="min-h-[65px] w-full text-xs bg-slate-50/50 rounded-lg border-slate-200 resize-y"
+                                      />
+                                    </div>
+                                  </div>
+                                </div>
                               )}
                             </div>
-
-                            {/* Option Text Input */}
-                            <Input
-                              type="text"
-                              value={opt.value}
-                              placeholder="Option value"
-                              onChange={(e) => handleUpdateOptionText(index, e.target.value)}
-                              className="h-9 text-xs bg-white rounded-xl border-slate-200 flex-1"
-                            />
-
-                            {/* Delete Button */}
-                            <button
-                              type="button"
-                              onClick={() => handleRemoveOption(index)}
-                              className="w-8 h-8 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 flex items-center justify-center transition-colors cursor-pointer"
-                              title="Delete option"
-                            >
-                              <Trash2 size={15} />
-                            </button>
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     )}
                   </div>
@@ -449,8 +550,8 @@ export default function AddAttributeClient() {
             {type !== "text" && type !== "rich_text" && (
               <div className="px-6 py-3.5 bg-slate-50/50 border-t border-slate-100">
                 <p className="text-[11px] text-slate-400 flex items-center gap-1.5">
-                  <ImageIcon size={14} className="text-slate-400 flex-shrink-0" />
-                  Click the image icon next to any option to upload an optional swatch thumbnail.
+                  <Globe size={14} className="text-slate-400 flex-shrink-0" />
+                  Click SEO button next to any value to add optional Meta Title & Description for search engines.
                 </p>
               </div>
             )}
@@ -461,4 +562,5 @@ export default function AddAttributeClient() {
     </div>
   );
 }
+
 
