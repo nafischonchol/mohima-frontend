@@ -22,6 +22,7 @@ import {
   User,
   HelpCircle,
   ThumbsUp,
+  ChevronRight,
 } from "lucide-react";
 import Header from "@/components/Header";
 import CartDrawer from "@/components/CartDrawer";
@@ -691,7 +692,45 @@ export default function ProductDetailsPage({
         <Header />
       </Suspense>
 
-      <main className="flex-1 w-full max-w-7xl mx-auto px-6 py-8 select-none">
+      <main className="flex-1 w-full max-w-7xl mx-auto px-6 py-6 select-none">
+        {/* Breadcrumb Navigation */}
+        <nav className="flex items-center gap-2 text-xs text-[#565656] mb-6 flex-wrap font-medium">
+          <Link href="/" className="hover:text-[#CC826A] transition-colors">
+            Home
+          </Link>
+          <ChevronRight size={12} className="text-[#565656]/50 shrink-0" />
+          <Link href="/products" className="hover:text-[#CC826A] transition-colors">
+            Products
+          </Link>
+          {product?.category?.breadcrumbs && Array.isArray(product.category.breadcrumbs) && product.category.breadcrumbs.length > 0 ? (
+            product.category.breadcrumbs.map((crumb: any) => (
+              <React.Fragment key={crumb.id || crumb.slug}>
+                <ChevronRight size={12} className="text-[#565656]/50 shrink-0" />
+                <Link
+                  href={`/products?category_id=${crumb.id}`}
+                  className="hover:text-[#CC826A] transition-colors"
+                >
+                  {crumb.name}
+                </Link>
+              </React.Fragment>
+            ))
+          ) : product?.category ? (
+            <>
+              <ChevronRight size={12} className="text-[#565656]/50 shrink-0" />
+              <Link
+                href={`/products?category_id=${product.category.id}`}
+                className="hover:text-[#CC826A] transition-colors"
+              >
+                {typeof product.category === 'object' ? product.category.name : product.category}
+              </Link>
+            </>
+          ) : null}
+          <ChevronRight size={12} className="text-[#565656]/50 shrink-0" />
+          <span className="text-[#121212] font-semibold truncate max-w-[200px] sm:max-w-xs">
+            {product.name}
+          </span>
+        </nav>
+
         {/* Product Shell Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-start">
           {/* Left Column: Media Gallery */}
