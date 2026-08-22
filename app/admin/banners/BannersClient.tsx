@@ -172,6 +172,21 @@ export default function BannersClient({ initialBanners }: BannersClientProps) {
     (banner.type_label || "").toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const getRecommendedSize = (bannerType: string) => {
+    switch (bannerType) {
+      case "hero":
+        return { size: "1920 × 800 px", ratio: "21:9 / 16:9", desc: "Top homepage slideshow banner" };
+      case "promo":
+        return { size: "1200 × 400 px", ratio: "3:1", desc: "Wide campaign banner card" };
+      case "sidebar":
+        return { size: "600 × 800 px", ratio: "3:4", desc: "Vertical sidebar banner widget" };
+      case "popup":
+        return { size: "800 × 800 px", ratio: "1:1", desc: "Modal popup announcement" };
+      default:
+        return { size: "1920 × 800 px", ratio: "16:9", desc: "High resolution image" };
+    }
+  };
+
   return (
     <div className="pt-2 pl-2 pr-4 pb-4 md:pt-3 md:pl-3 md:pr-6 md:pb-6 lg:pt-4 lg:pl-4 lg:pr-8 lg:pb-8 w-full space-y-6 relative">
 
@@ -438,9 +453,23 @@ export default function BannersClient({ initialBanners }: BannersClientProps) {
               </div>
 
               <div className="space-y-2.5">
-                <Label className="text-xs font-bold text-slate-500 uppercase flex items-center gap-1">
-                  <ImageIcon size={12} className="text-slate-400" /> Banner Image
-                </Label>
+                <div className="flex flex-wrap items-center justify-between gap-1">
+                  <Label className="text-xs font-bold text-slate-500 uppercase flex items-center gap-1">
+                    <ImageIcon size={12} className="text-slate-400" /> Banner Image
+                  </Label>
+                  {type && (
+                    <span className="text-[11px] font-semibold text-indigo-700 bg-indigo-50 border border-indigo-100 px-2.5 py-0.5 rounded-full">
+                      Recommended: {getRecommendedSize(type).size} ({getRecommendedSize(type).ratio})
+                    </span>
+                  )}
+                </div>
+
+                {type && (
+                  <p className="text-xs text-slate-500 bg-slate-50 border border-slate-100 p-2.5 rounded-xl flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-indigo-500 flex-shrink-0" />
+                    <span><strong>{getRecommendedSize(type).desc}:</strong> Ideal resolution is <strong>{getRecommendedSize(type).size}</strong> for optimal visual clarity.</span>
+                  </p>
+                )}
 
                 {imagePreview ? (
                   <div className="relative group/preview rounded-2xl border border-slate-200/60 bg-slate-50/50 p-3.5 flex items-center gap-4 transition-all hover:bg-slate-50">
@@ -487,7 +516,10 @@ export default function BannersClient({ initialBanners }: BannersClientProps) {
                       <p className="text-sm font-bold text-slate-700">Upload banner image</p>
                       <p className="text-xs text-slate-400 mt-0.5">Click to browse</p>
                     </div>
-                    <p className="text-[10px] text-slate-400 font-medium">PNG, JPG, JPEG, or WEBP up to 5MB</p>
+                    <p className="text-[10px] text-slate-400 font-medium">
+                      PNG, JPG, JPEG, or WEBP up to 5MB
+                      {type && ` • Recommended: ${getRecommendedSize(type).size}`}
+                    </p>
                   </div>
                 )}
 
