@@ -255,6 +255,10 @@ export interface ProductFilterParams {
   category_id?: number | string;
   sub_category_id?: number | string;
   brand_id?: number | string;
+  concern_id?: number | string;
+  attribute_value_id?: number | string;
+  min_price?: number;
+  max_price?: number;
   is_stock?: boolean | number;
   sort_by?: string;
   per_page?: number;
@@ -268,5 +272,52 @@ export async function filterProducts(
     isPublic: true,
     params,
     fallbackData: [],
+  });
+}
+
+export interface AttributeItem {
+  id: number;
+  name: string;
+  slug: string;
+  type: string;
+  attribute_values?: Array<{
+    id: number;
+    attribute_id: number;
+    value: string;
+    image?: string | null;
+  }>;
+}
+
+export interface FilterableData {
+  categories: Array<{
+    id: number;
+    name: string;
+    slug: string;
+    parent_id?: number | null;
+    icon?: string | null;
+    children?: Array<{ id: number; name: string; slug: string }>;
+  }>;
+  brands: Array<{
+    id: number;
+    name: string;
+    slug: string;
+    icon?: string | null;
+  }>;
+  attributes?: AttributeItem[];
+  skin_concerns?: Array<{
+    id: number;
+    value: string;
+    image?: string | null;
+  }>;
+  price_range: {
+    min: number;
+    max: number;
+  };
+}
+
+export async function getFilterableData(): Promise<ApiResponse<FilterableData | null>> {
+  return requestApi<FilterableData | null>("/customer/filterable-data", {
+    isPublic: true,
+    fallbackData: null,
   });
 }
