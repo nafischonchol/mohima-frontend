@@ -367,11 +367,15 @@ export default function ProductDetailsPage({
 
   const [product, setProduct] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isNotFound, setIsNotFound] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
     async function loadProduct() {
       setIsLoading(true);
+      setErrorMessage(null);
+      setIsNotFound(false);
       const res = await getCustomerProductDetails(id);
       if (isMounted) {
         if (res && res.success && res.resources) {
@@ -379,7 +383,22 @@ export default function ProductDetailsPage({
         } else if (res && (res as any).id) {
           setProduct(res);
         } else {
-          setProduct(productsDatabase.find((p) => p.id === id || p.slug_url === id) || null);
+          // Check if fallback product exists in mock database
+          const mockProduct = productsDatabase.find((p) => p.id === id || p.slug_url === id);
+          if (mockProduct) {
+            setProduct(mockProduct);
+          } else {
+            setProduct(null);
+            if (res && res.message) {
+              setErrorMessage(res.message);
+              if (res.message.toLowerCase().includes('not found') || res.message.includes('404')) {
+                setIsNotFound(true);
+              }
+            } else {
+              setIsNotFound(true);
+              setErrorMessage('Product not found.');
+            }
+          }
         }
         setIsLoading(false);
       }
@@ -392,8 +411,10 @@ export default function ProductDetailsPage({
   useEffect(() => {
     if (product) {
       document.title = `${product.name} | Mohima Premium Beauty`;
+    } else if (isNotFound) {
+      document.title = "Product Not Found | Mohima Premium Beauty";
     }
-  }, [product]);
+  }, [product, isNotFound]);
 
   // UI States
   const [quantity, setQuantity] = useState(1);
@@ -513,7 +534,6 @@ export default function ProductDetailsPage({
       setIsSubmittingQuestion(false);
       setNewQuestion("");
 
-      // Simulated live Expert Answer for high interactivity and feedback
       setTimeout(() => {
         setQnas((prev) =>
           prev.map((q) => {
@@ -672,7 +692,7 @@ export default function ProductDetailsPage({
     ? Math.round(((displayOriginalPrice - displayPrice) / displayOriginalPrice) * 100)
     : 0;
 
-  if (isLoading || !product || !metadata) {
+  if (isLoading) {
     return (
       <div className="flex flex-col min-h-screen bg-[#FAF9F6] text-[#121212] font-sans">
         <Suspense fallback={<div className="h-20 bg-white"></div>}>
@@ -680,6 +700,42 @@ export default function ProductDetailsPage({
         </Suspense>
         <div className="flex-1 w-full max-w-7xl mx-auto px-6 py-24 flex justify-center items-center">
           <div className="w-10 h-10 border-4 border-[#CC826A]/30 border-t-[#CC826A] rounded-full animate-spin" />
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (!product || !metadata || isNotFound) {
+    return (
+      <div className="flex flex-col min-h-screen bg-[#FAF9F6] text-[#121212] font-sans">
+        <Suspense fallback={<div className="h-20 bg-white"></div>}>
+          <Header />
+        </Suspense>
+        <div className="flex-1 w-full max-w-4xl mx-auto px-6 py-20 flex flex-col items-center justify-center text-center">
+          <div className="w-20 h-20 bg-[#CC826A]/10 text-[#CC826A] rounded-full flex items-center justify-center mb-6">
+            <AlertCircle size={40} />
+          </div>
+          <h1 className="text-3xl font-serif font-bold text-[#121212] mb-3">
+            Product Not Found
+          </h1>
+          <p className="text-[#565656] max-w-md mb-8 text-sm sm:text-base leading-relaxed">
+            {errorMessage || "The product you are looking for does not exist or has been removed."}
+          </p>
+          <div className="flex items-center gap-4 flex-wrap justify-center">
+            <Link
+              href="/"
+              className="px-6 py-3 bg-[#121212] text-white text-xs font-semibold tracking-wider uppercase rounded-full hover:bg-black transition-all shadow-sm"
+            >
+              Back to Home
+            </Link>
+            <Link
+              href="/products"
+              className="px-6 py-3 bg-white border border-[#121212]/15 text-[#121212] text-xs font-semibold tracking-wider uppercase rounded-full hover:bg-gray-50 transition-all shadow-xs"
+            >
+              Browse All Products
+            </Link>
+          </div>
         </div>
         <Footer />
       </div>
