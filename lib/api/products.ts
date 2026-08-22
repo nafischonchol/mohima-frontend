@@ -119,22 +119,55 @@ export async function checkProductByBarcode(
   });
 }
 
-export async function getPopularProducts(params?: {
-  per_page?: number;
-  page?: number;
-}): Promise<ApiResponse<Product[]>> {
-  return requestApi<Product[]>("/customer/popular-products", {
-    isPublic: true,
-    params,
-    next: {
-      revalidate: 120,
-      tags: [
-        "popular-products",
-        `popular-products:page:${params?.page || 1}:per_page:${params?.per_page || 20}`,
-      ],
-    },
-    fallbackData: [],
-  });
+import { productsDatabase } from "@/data/products";
+
+export async function getPopularProducts(
+  pageParam: number | { per_page?: number; page?: number } = 1
+): Promise<{ products: any[]; pagination?: any; success?: boolean }> {
+  const pageNum = typeof pageParam === "number" ? pageParam : (pageParam?.page || 1);
+  const perPage = typeof pageParam === "object" ? (pageParam?.per_page || 20) : 20;
+
+  try {
+    const res = await requestApi<any>("/customer/popular-products", {
+      isPublic: true,
+      params: { page: pageNum, per_page: perPage },
+      next: {
+        revalidate: 120,
+        tags: ["popular-products", `popular-products:page:${pageNum}:per_page:${perPage}`],
+      },
+      fallbackData: null,
+    });
+
+    if (res && res.success && res.resources) {
+      const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL || "http://127.0.0.1:8000";
+      const products = res.resources.map((item: any) => {
+        const price = item.discount_price || item.min_discount_price || item.price || item.min_price || 0;
+        const originalPrice = item.price || item.min_price || 0;
+        return {
+          id: String(item.id),
+          slug_url: item.slug_url,
+          name: item.name,
+          category: item.category?.name || "Uncategorized",
+          price: Number(price),
+          originalPrice: originalPrice > price ? Number(originalPrice) : undefined,
+          image: item.thumbnail
+            ? item.thumbnail.startsWith("http")
+              ? item.thumbnail
+              : `${apiBase}${item.thumbnail}`
+            : "/images/product_snail.png",
+          rating: item.rating || 4.8,
+          reviewsCount: item.reviews_count || 120,
+          concern: "General",
+          isBestSeller: true,
+          isNew: false,
+        };
+      });
+      return { products, pagination: res.pagination, success: true };
+    }
+  } catch (error) {
+    console.error("Failed to fetch popular products", error);
+  }
+  return { products: productsDatabase, success: false };
 }
 
 export async function getBestSellingProducts(params?: {

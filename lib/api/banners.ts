@@ -67,4 +67,13 @@ export async function updateBannerStatus(
   });
 }
 
+export const getHeroBanners = async (): Promise<ApiResponse<Banner[]>> => {
+  return requestApi<Banner[]>("/customer/banners/hero", {
+    isPublic: true,
+    fallbackData: [],
+  });
+};
+
+
+
 

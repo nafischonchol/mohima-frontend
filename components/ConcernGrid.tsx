@@ -1,0 +1,212 @@
+"use client";
+
+import React, { useState, useEffect } from "react";
+import Image from "next/image";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
+
+interface Concern {
+  id: string;
+  name: string;
+  subText: string;
+  image: string;
+}
+
+const concerns: Concern[] = [
+  {
+    id: "Dry Skin",
+    name: "Dryness & Dehydration",
+    subText: "Intense Moisture Infusion",
+    image: "/images/concern_dry.png",
+  },
+  {
+    id: "Acne Prone",
+    name: "Acne & Sensitive Skin",
+    subText: "Soothe & Calming Botanicals",
+    image: "/images/concern_acne.png",
+  },
+  {
+    id: "Anti-Aging",
+    name: "Aging & Firming",
+    subText: "Restore Elasticity & Lift",
+    image: "/images/concern_aging.png",
+  },
+  {
+    id: "Dullness",
+    name: "Dullness & Dark Spots",
+    subText: "Brighten & Glow Ampoules",
+    image: "/images/concern_glow.png",
+  },
+];
+
+export default function ConcernGrid() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
+  const selectedConcern = searchParams?.get("concern");
+
+  const onConcernClick = (concern: string | null) => {
+    const params = new URLSearchParams(searchParams?.toString());
+    if (concern) {
+      params.set("concern", concern);
+      params.delete("category");
+    } else {
+      params.delete("concern");
+    }
+    router.push(`${pathname}?${params.toString()}`, { scroll: false });
+  };
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [itemsToShow, setItemsToShow] = useState(3);
+  const [isHovered, setIsHovered] = useState(false);
+
+  // Responsive items to show
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 640) {
+        setItemsToShow(1);
+      } else if (window.innerWidth < 1024) {
+        setItemsToShow(2);
+      } else {
+        setItemsToShow(3);
+      }
+    };
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  // Auto-play timer (pauses when user hovers)
+  useEffect(() => {
+    if (isHovered) return;
+    const timer = setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % concerns.length);
+    }, 4000);
+    return () => clearInterval(timer);
+  }, [isHovered]);
+
+  const handlePrev = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setCurrentIndex((prev) => (prev - 1 + concerns.length) % concerns.length);
+  };
+
+  const handleNext = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setCurrentIndex((prev) => (prev + 1) % concerns.length);
+  };
+
+  // Duplicate items array to make the looping feel smooth and seamless
+  const extendedConcerns = [...concerns, ...concerns];
+
+  return (
+    <section className="w-full max-w-7xl mx-auto px-6 py-12 md:py-16 select-none scroll-reveal">
+      {/* Title Header */}
+      <div className="text-center mb-10 flex flex-col items-center">
+        <span className="text-[10px] tracking-[0.3em] font-bold text-[#CC826A] uppercase mb-1">
+          Targeted Solvers
+        </span>
+        <h2 className="font-serif text-2xl sm:text-3xl md:text-4xl font-normal text-[#121212] tracking-wide">
+          Shop by Skin Concern
+        </h2>
+        <div className="w-12 h-px bg-[#CC826A] mt-4" />
+      </div>
+
+      {/* Slider Container */}
+      <div
+        className="relative w-full overflow-hidden group"
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+      >
+        {/* Navigation Arrows */}
+        <button
+          onClick={handlePrev}
+          className="absolute left-4 top-1/2 -translate-y-1/2 z-20 bg-white/90 hover:bg-white text-[#121212] p-3 rounded-full border border-black/[0.04] shadow-md hover:scale-105 active:scale-95 transition-all cursor-pointer opacity-0 group-hover:opacity-100 focus:opacity-100"
+          aria-label="Previous slide"
+        >
+          <ChevronLeft size={18} />
+        </button>
+        <button
+          onClick={handleNext}
+          className="absolute right-4 top-1/2 -translate-y-1/2 z-20 bg-white/90 hover:bg-white text-[#121212] p-3 rounded-full border border-black/[0.04] shadow-md hover:scale-105 active:scale-95 transition-all cursor-pointer opacity-0 group-hover:opacity-100 focus:opacity-100"
+          aria-label="Next slide"
+        >
+          <ChevronRight size={18} />
+        </button>
+
+        {/* Sliding Track (Flex wrapper) */}
+        <div
+          className="flex transition-transform duration-700 ease-in-out"
+          style={{
+            transform: `translateX(-${currentIndex * (100 / itemsToShow)}%)`,
+          }}
+        >
+          {extendedConcerns.map((concern, idx) => {
+            const isSelected = selectedConcern === concern.id;
+            return (
+              <div
+                key={`${concern.id}-${idx}`}
+                className="flex-shrink-0 px-3 transition-all duration-350"
+                style={{ width: `${100 / itemsToShow}%` }}
+              >
+                <button
+                  onClick={() => onConcernClick(isSelected ? null : concern.id)}
+                  className={`w-full group/card relative h-80 sm:h-96 rounded-2xl overflow-hidden border cursor-pointer transition-all duration-350 ${
+                    isSelected
+                      ? "border-[#CC826A] shadow-lg scale-[0.98]"
+                      : "border-black/[0.05] hover:shadow-md hover:scale-[1.01]"
+                  }`}
+                >
+                  {/* Background Image */}
+                  <Image
+                    src={concern.image}
+                    alt={concern.name}
+                    fill
+                    className="object-cover transition-transform duration-700 ease-out group-hover/card:scale-105"
+                    sizes="(max-w-7xl) 33vw, 100vw"
+                  />
+
+                  {/* Tint overlay */}
+                  <div
+                    className={`absolute inset-0 transition-colors duration-350 ${
+                      isSelected
+                        ? "bg-[#CC826A]/35"
+                        : "bg-black/30 group-hover/card:bg-black/25"
+                    }`}
+                  />
+
+                  {/* Text details */}
+                  <div className="absolute inset-0 p-6 flex flex-col justify-end text-left text-white z-10">
+                    <span className="text-[9px] font-bold tracking-[0.35em] text-[#E0A996] uppercase mb-1.5">
+                      {concern.subText}
+                    </span>
+                    <h3 className="font-serif text-lg md:text-xl font-normal tracking-wide leading-tight mb-2">
+                      {concern.name}
+                    </h3>
+                    <span className="text-[10px] font-semibold tracking-widest uppercase border-b border-white/60 pb-0.5 self-start group-hover/card:border-white transition-all">
+                      {isSelected ? "Filter active" : "Explore"}
+                    </span>
+                  </div>
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Slide Indicators/Dots */}
+      <div className="flex justify-center gap-2 mt-8">
+        {concerns.map((_, idx) => (
+          <button
+            key={idx}
+            onClick={() => setCurrentIndex(idx)}
+            className={`h-1.5 rounded-full transition-all duration-350 cursor-pointer ${
+              idx === currentIndex ? "bg-[#CC826A] w-6" : "bg-black/15 w-1.5"
+            }`}
+            aria-label={`Go to slide ${idx + 1}`}
+          />
+        ))}
+      </div>
+    </section>
+  );
+}

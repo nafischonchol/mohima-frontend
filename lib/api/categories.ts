@@ -65,3 +65,12 @@ export async function getPublicCategories(): Promise<ApiResponse<PublicCategory[
   });
 }
 
+export const getPopularCategories = async (): Promise<ApiResponse<PublicCategory[]>> => {
+  return requestApi<PublicCategory[]>("/customer/popular-categories", {
+    isPublic: true,
+    fallbackData: [],
+  });
+};
+
+
+
