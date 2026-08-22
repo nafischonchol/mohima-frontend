@@ -487,7 +487,7 @@ export default function BannersClient({ initialBanners }: BannersClientProps) {
                       <p className="text-sm font-bold text-slate-700">Upload banner image</p>
                       <p className="text-xs text-slate-400 mt-0.5">Click to browse</p>
                     </div>
-                    <p className="text-[10px] text-slate-400 font-medium">PNG, JPG, JPEG, or WEBP up to 2MB</p>
+                    <p className="text-[10px] text-slate-400 font-medium">PNG, JPG, JPEG, or WEBP up to 5MB</p>
                   </div>
                 )}
 
