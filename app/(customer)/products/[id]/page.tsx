@@ -816,12 +816,11 @@ export default function ProductDetailsPage({
             </div>
 
             {/* Short Description */}
-            <p className="text-xs sm:text-sm text-[#565656] font-light leading-relaxed">
-              Experience authentic clinical skincare directly from Seoul.
-              Formulated using premium clean ingredients to rebuild your natural
-              skin barrier, combat environmental damage, and restore a glassy
-              glow.
-            </p>
+            {product.short_description && (
+              <p className="text-xs sm:text-sm text-[#565656] font-light leading-relaxed whitespace-pre-line">
+                {product.short_description}
+              </p>
+            )}
 
             {/* Brand & Category Info Grid */}
             <div className="grid grid-cols-[90px_1fr] gap-y-1 text-sm text-[#121212] font-sans my-2">

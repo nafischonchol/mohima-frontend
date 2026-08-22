@@ -5,6 +5,7 @@ import { z } from "zod";
  */
 export const productSchema = z.object({
   name: z.string().trim().min(1, "Product name is required"),
+  shortDescription: z.string().trim().min(1, "Short description is required"),
   category: z.string().min(1, "Category is required"),
   unit: z.string().optional(),
   mainImage: z.any().refine((val) => val !== null && val !== undefined, "Thumbnail image is required"),

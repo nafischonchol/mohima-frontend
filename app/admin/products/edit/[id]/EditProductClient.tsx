@@ -1660,6 +1660,7 @@ export default function EditProductClient({
 
     const validationResult = productSchema.safeParse({
       name,
+      shortDescription,
       category,
       unit,
       mainImage: mainImage || existingThumbnailUrl,
@@ -1994,21 +1995,25 @@ export default function EditProductClient({
               </div>
 
               {/* Short Description */}
-              <div className="space-y-2">
-                <Label
-                  htmlFor="product-short-desc"
-                  className="text-slate-800 font-semibold flex items-center justify-between"
-                >
-                  <span>
-                    Short Description{" "}
+              <div className="space-y-2" id="error-anchor-shortDescription">
+                <div className="flex justify-between items-center">
+                  <Label
+                    htmlFor="product-short-desc"
+                    className="text-slate-800 font-semibold flex items-center gap-1"
+                  >
+                    Short Description <span className="text-rose-500">*</span>
+                  </Label>
+                  <div className="flex items-center gap-2">
+                    {errors.shortDescription && (
+                      <span className="text-xs text-rose-500 flex items-center gap-1 font-medium">
+                        <AlertCircle className="w-3 h-3" /> {errors.shortDescription}
+                      </span>
+                    )}
                     <span className="text-xs text-slate-400 font-normal">
-                      (Optional)
+                      {shortDescription.length}/1000
                     </span>
-                  </span>
-                  <span className="text-xs text-slate-400 font-normal">
-                    {shortDescription.length}/1000
-                  </span>
-                </Label>
+                  </div>
+                </div>
                 <Textarea
                   id="product-short-desc"
                   placeholder="Enter a brief product overview or key summary..."
@@ -2016,7 +2021,7 @@ export default function EditProductClient({
                   maxLength={1000}
                   rows={2}
                   onChange={(e) => setShortDescription(e.target.value)}
-                  className="resize-y text-sm"
+                  className={`resize-y text-sm ${errors.shortDescription ? "border-rose-500 focus:ring-rose-500" : ""}`}
                 />
               </div>
 
