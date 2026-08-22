@@ -123,10 +123,12 @@ export async function checkProductByBarcode(
 import { productsDatabase } from "@/data/products";
 
 export async function getPopularProducts(
-  pageParam: number | { per_page?: number; page?: number } = 1
+  pageParam: number | { per_page?: number; page?: number } = 1,
 ): Promise<{ products: any[]; pagination?: any; success?: boolean }> {
-  const pageNum = typeof pageParam === "number" ? pageParam : (pageParam?.page || 1);
-  const perPage = typeof pageParam === "object" ? (pageParam?.per_page || 20) : 20;
+  const pageNum =
+    typeof pageParam === "number" ? pageParam : pageParam?.page || 1;
+  const perPage =
+    typeof pageParam === "object" ? pageParam?.per_page || 20 : 20;
 
   try {
     const res = await requestApi<any>("/customer/popular-products", {
@@ -134,15 +136,24 @@ export async function getPopularProducts(
       params: { page: pageNum, per_page: perPage },
       next: {
         revalidate: 120,
-        tags: ["popular-products", `popular-products:page:${pageNum}:per_page:${perPage}`],
+        tags: [
+          "popular-products",
+          `popular-products:page:${pageNum}:per_page:${perPage}`,
+        ],
       },
       fallbackData: null,
     });
 
     if (res && res.success && res.resources) {
-      const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL || "http://127.0.0.1:8000";
+      const apiBase =
+        process.env.NEXT_PUBLIC_API_BASE_URL || "http://127.0.0.1:8000";
       const products = res.resources.map((item: any) => {
-        const price = item.discount_price || item.min_discount_price || item.price || item.min_price || 0;
+        const price =
+          item.discount_price ||
+          item.min_discount_price ||
+          item.price ||
+          item.min_price ||
+          0;
         const originalPrice = item.price || item.min_price || 0;
         return {
           id: String(item.id),
@@ -150,7 +161,8 @@ export async function getPopularProducts(
           name: item.name,
           category: item.category?.name || "Uncategorized",
           price: Number(price),
-          originalPrice: originalPrice > price ? Number(originalPrice) : undefined,
+          originalPrice:
+            originalPrice > price ? Number(originalPrice) : undefined,
           image: item.thumbnail
             ? item.thumbnail.startsWith("http")
               ? item.thumbnail
@@ -250,7 +262,7 @@ export interface ProductFilterParams {
 }
 
 export async function filterProducts(
-  params?: ProductFilterParams
+  params?: ProductFilterParams,
 ): Promise<ApiResponse<Product[]>> {
   return requestApi<Product[]>("/customer/products/filter", {
     isPublic: true,

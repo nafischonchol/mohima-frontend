@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
+import { getAttributeValues } from "@/lib/api/attributes";
 
 interface Concern {
   id: string;
@@ -12,7 +13,7 @@ interface Concern {
   image: string;
 }
 
-const concerns: Concern[] = [
+const fallbackConcerns: Concern[] = [
   {
     id: "Dry Skin",
     name: "Dryness & Dehydration",
@@ -39,11 +40,68 @@ const concerns: Concern[] = [
   },
 ];
 
-export default function ConcernGrid() {
+interface ConcernGridProps {
+  initialConcerns?: Concern[];
+}
+
+export default function ConcernGrid({ initialConcerns }: ConcernGridProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const selectedConcern = searchParams?.get("concern");
+
+  const [concerns, setConcerns] = useState<Concern[]>(
+    initialConcerns && initialConcerns.length > 0
+      ? initialConcerns
+      : fallbackConcerns,
+  );
+
+  useEffect(() => {
+    if (initialConcerns && initialConcerns.length > 0) return;
+    let isMounted = true;
+    async function fetchConcerns() {
+      try {
+        const res = await getAttributeValues("skin-concern");
+        if (res && res.success && res.resources) {
+          const apiBase =
+            process.env.NEXT_PUBLIC_API_BASE_URL || "http://127.0.0.1:8000";
+          const attributeData = res.resources;
+          if (
+            attributeData.values &&
+            Array.isArray(attributeData.values) &&
+            attributeData.values.length > 0
+          ) {
+            const mapped: Concern[] = attributeData.values
+              .filter((v: any) => v.is_active !== false)
+              .map((v: any, index: number) => {
+                const fallbackImg =
+                  fallbackConcerns[index % fallbackConcerns.length].image;
+                const img = v.image
+                  ? v.image.startsWith("http")
+                    ? v.image
+                    : `${apiBase}${v.image}`
+                  : fallbackImg;
+                return {
+                  id: v.value,
+                  name: v.meta_title || v.value,
+                  subText: v.meta_description || "Targeted Skin Solution",
+                  image: img,
+                };
+              });
+            if (mapped.length > 0 && isMounted) {
+              setConcerns(mapped);
+            }
+          }
+        }
+      } catch (err) {
+        console.error("Failed to load concern attributes from API", err);
+      }
+    }
+    fetchConcerns();
+    return () => {
+      isMounted = false;
+    };
+  }, [initialConcerns]);
 
   const onConcernClick = (concern: string | null) => {
     const params = new URLSearchParams(searchParams?.toString());

@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidateTag } from "next/cache";
 import { requestApi } from "@/lib/api/client";
 import type { ApiResponse } from "@/lib/api/client";
 
@@ -51,10 +52,16 @@ export async function getAttribute(id: number | string): Promise<ApiResponse<Att
 }
 
 export async function createAttribute(formData: FormData): Promise<ApiResponse<Attribute | null>> {
-  return requestApi<Attribute | null>("/admin/attributes", {
+  const res = await requestApi<Attribute | null>("/admin/attributes", {
     method: "POST",
     body: formData,
   });
+
+  if (res && res.success) {
+    revalidateTag("attribute-values", "default");
+  }
+
+  return res;
 }
 
 export async function updateAttribute(
@@ -65,8 +72,27 @@ export async function updateAttribute(
     formData.append("_method", "PUT");
   }
 
-  return requestApi<Attribute | null>(`/admin/attributes/${id}`, {
+  const res = await requestApi<Attribute | null>(`/admin/attributes/${id}`, {
     method: "POST",
     body: formData,
+  });
+
+  if (res && res.success) {
+    revalidateTag("attribute-values", "default");
+  }
+
+  return res;
+}
+
+export async function getAttributeValues(
+  slug: string,
+): Promise<ApiResponse<any>> {
+  return requestApi<any>(`/customer/attributes/${slug}/values`, {
+    isPublic: true,
+    next: {
+      revalidate: 3600,
+      tags: ["attribute-values", `attribute-values:${slug}`],
+    },
+    fallbackData: null,
   });
 }
