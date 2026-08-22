@@ -29,7 +29,7 @@ import Footer from "@/components/Footer";
 import ProductCard from "@/components/ProductCard";
 import { useCart } from "@/context/CartContext";
 import { productsDatabase } from "@/data/products";
-import { getProductDetails } from "@/lib/api/products";
+import { getProductDetails, getCustomerProductDetails } from "@/lib/api/products";
 
 // Static mock reviews database corresponding to products
 interface Review {
@@ -371,12 +371,14 @@ export default function ProductDetailsPage({
     let isMounted = true;
     async function loadProduct() {
       setIsLoading(true);
-      const data = await getProductDetails(id);
+      const res = await getCustomerProductDetails(id);
       if (isMounted) {
-        if (data) {
-          setProduct(data);
+        if (res && res.success && res.resources) {
+          setProduct(res.resources);
+        } else if (res && (res as any).id) {
+          setProduct(res);
         } else {
-          setProduct(productsDatabase.find((p) => p.id === id) || productsDatabase[0]);
+          setProduct(productsDatabase.find((p) => p.id === id || p.slug_url === id) || null);
         }
         setIsLoading(false);
       }
@@ -433,26 +435,27 @@ export default function ProductDetailsPage({
   const [isSubmittingQuestion, setIsSubmittingQuestion] = useState(false);
 
   const defaultMetadata = product ? (productMetadataMap[product.id] || {
-    brand: "Mohima Curated",
-    madeIn: "South Korea",
-    skinType: "All skin types",
-    size: "100ml",
-    description: `The premium formulation of ${product.name} is designed to restore skin barrier health and maintain glass skin radiance. Sourced directly from authentic laboratories.`,
-    benefits: [
+    brand: typeof product.brand === "object" ? product.brand?.name : (product.brand || "Mohima Curated"),
+    madeIn: product.made_in || "South Korea",
+    skinType: product.skin_type || "All skin types",
+    size: product.unit?.name || product.size || "100ml",
+    description: product.description || `The premium formulation of ${product.name} is designed to restore skin barrier health and maintain glass skin radiance. Sourced directly from authentic laboratories.`,
+    benefits: product.benefits || [
       "100% Authentic premium skincare formulation.",
       "Hypoallergenic and dermatologically tested.",
       "Free from sulfates, parabens, and artificial fragrances.",
     ],
     howToUse:
-      "Dispense a moderate amount and apply evenly onto the face. Gently tap to optimize absorption as part of your daily skincare routine.",
+      product.how_to_use || "Dispense a moderate amount and apply evenly onto the face. Gently tap to optimize absorption as part of your daily skincare routine.",
     ingredients:
-      "Aqua, Butylene Glycol, Glycerin, Niacinamide, Sodium Hyaluronate, Centella Asiatica Extract, Allantoin, Panthenol, Carbomer, Phenoxyethanol, Ethylhexylglycerin.",
+      product.ingredients || "Aqua, Butylene Glycol, Glycerin, Niacinamide, Sodium Hyaluronate, Centella Asiatica Extract, Allantoin, Panthenol, Carbomer, Phenoxyethanol, Ethylhexylglycerin.",
   }) : null;
 
   const metadata = product ? {
     ...defaultMetadata!,
-    brand: product.brand || defaultMetadata!.brand,
+    brand: typeof product.brand === "object" ? (product.brand?.name || "Mohima Curated") : (product.brand || defaultMetadata!.brand),
     description: product.description || defaultMetadata!.description,
+    ingredients: product.ingredients || defaultMetadata!.ingredients,
   } : null;
 
   // Reviews states
@@ -528,12 +531,23 @@ export default function ProductDetailsPage({
   };
 
   // Generate thumbnail gallery images
-  const galleryImages = product ? (product.images?.length > 0 ? product.images : [
-    product.image,
-    "/images/kbeauty_editorial.png",
-    "/images/hero_banner_1.png",
-    "/images/hero_banner_2.png",
-  ]) : [];
+  const galleryImages = React.useMemo(() => {
+    if (!product) return [];
+    const imgs: string[] = [];
+    if (product.images && Array.isArray(product.images) && product.images.length > 0) {
+      imgs.push(...product.images);
+    }
+    if (product.thumbnail && !imgs.includes(product.thumbnail)) {
+      imgs.unshift(product.thumbnail);
+    }
+    if (product.image && !imgs.includes(product.image)) {
+      imgs.push(product.image);
+    }
+    if (imgs.length === 0) {
+      imgs.push("/images/product_snail.png");
+    }
+    return imgs;
+  }, [product]);
 
   const handleQuantityChange = (type: "inc" | "dec") => {
     if (type === "inc") {
@@ -817,7 +831,7 @@ export default function ProductDetailsPage({
               </span>
               <span className="text-[#565656] font-normal">Category:</span>
               <span className="font-normal text-[#121212]">
-                Skincare &nbsp;&nbsp;&nbsp;&nbsp; {product.category}
+                {typeof product.category === "object" ? (product.category?.name || "Skincare") : (product.category || "Skincare")}
               </span>
             </div>
 
