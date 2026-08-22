@@ -947,11 +947,11 @@ export default function AddProductClient({
           id: attr.id,
           name: attr.name,
           type: attr.type,
-          values: attr.values,
+          values: (attr.values || []).map((v: any) => typeof v === "string" ? v : v.value),
           value: attr.type === "multi_select"
             ? []
             : attr.type === "select" && attr.values && attr.values.length > 0
-            ? attr.values[0]
+            ? (typeof attr.values[0] === "string" ? attr.values[0] : attr.values[0].value)
             : ""
         }));
       
@@ -977,11 +977,11 @@ export default function AddProductClient({
         id: attr.id,
         name: attr.name,
         type: attr.type,
-        values: attr.values,
+        values: (attr.values || []).map((v: any) => typeof v === "string" ? v : v.value),
         value: attr.type === "multi_select"
           ? []
           : attr.type === "select" && attr.values && attr.values.length > 0
-          ? attr.values[0]
+          ? (typeof attr.values[0] === "string" ? attr.values[0] : attr.values[0].value)
           : ""
       }
     ]);
@@ -1107,7 +1107,7 @@ export default function AddProductClient({
         id: attr.id,
         name: attr.name,
         type: attr.type as "select" | "multi_select",
-        values: attr.values as string[],
+        values: (attr.values || []).map((v: any) => typeof v === "string" ? v : v.value),
         selectedValues: []
       }
     ]);

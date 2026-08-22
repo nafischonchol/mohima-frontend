@@ -3,15 +3,37 @@
 import { requestApi } from "@/lib/api/client";
 import type { ApiResponse } from "@/lib/api/client";
 
+export interface AttributeValueOption {
+  id?: number;
+  value: string;
+  image?: string | null;
+  image_relative?: string | null;
+  remove_image?: boolean;
+}
+
 export interface Attribute {
   id: number;
   name: string;
   type: "text" | "rich_text" | "select" | "multi_select";
-  values?: string[] | null;
+  values?: AttributeValueOption[] | string[] | null;
   is_active: boolean;
   is_default_specification?: boolean;
   created_at: string;
   updated_at: string;
+}
+
+export interface CreateOrUpdateAttributePayload {
+  name: string;
+  type: string;
+  values?: Array<{
+    id?: number;
+    value: string;
+    image?: string | null;
+    image_relative?: string | null;
+    remove_image?: boolean;
+  }> | null;
+  is_active: boolean;
+  is_default_specification?: boolean;
 }
 
 export async function getAttributes(): Promise<ApiResponse<Attribute[]>> {
@@ -22,32 +44,23 @@ export async function getAttribute(id: number | string): Promise<ApiResponse<Att
   return requestApi<Attribute | null>(`/admin/attributes/${id}`);
 }
 
-export async function createAttribute(data: {
-  name: string;
-  type: string;
-  values?: string[] | null;
-  is_active: boolean;
-  is_default_specification?: boolean;
-}): Promise<ApiResponse<Attribute | null>> {
+export async function createAttribute(formData: FormData): Promise<ApiResponse<Attribute | null>> {
   return requestApi<Attribute | null>("/admin/attributes", {
     method: "POST",
-    body: data,
+    body: formData,
   });
 }
 
 export async function updateAttribute(
   id: number | string,
-  data: {
-    name: string;
-    type: string;
-    values?: string[] | null;
-    is_active: boolean;
-    is_default_specification?: boolean;
-  }
+  formData: FormData
 ): Promise<ApiResponse<Attribute | null>> {
+  if (!formData.has("_method")) {
+    formData.append("_method", "PUT");
+  }
+
   return requestApi<Attribute | null>(`/admin/attributes/${id}`, {
-    method: "PUT",
-    body: data,
+    method: "POST",
+    body: formData,
   });
 }
-
