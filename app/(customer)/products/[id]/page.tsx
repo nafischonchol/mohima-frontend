@@ -638,9 +638,16 @@ export default function ProductDetailsPage({
   const cartTotalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
 
   // Recommendations (Other products)
-  const recommendedProducts = product ? productsDatabase
-    .filter((p) => p.id !== product.id)
-    .slice(0, 4) : [];
+  const recommendedProducts = React.useMemo(() => {
+    if (!product) return [];
+    return productsDatabase
+      .filter((p) => String(p.id) !== String(product.id))
+      .map((p) => ({
+        ...p,
+        slug_url: p.slug_url || (p as any).slug || `${p.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-${p.id}`,
+      }))
+      .slice(0, 4);
+  }, [product]);
 
   // Calculate discount percentage
   const discountPercent = product?.originalPrice

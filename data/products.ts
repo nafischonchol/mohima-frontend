@@ -3,6 +3,7 @@ import { Product } from "@/components/ProductCard";
 export const productsDatabase: Product[] = [
   {
     id: "1",
+    slug_url: "muze-snail-mucin-96-power-essence-1",
     name: "MUZE Snail Mucin 96 Power Essence",
     category: "Serum",
     price: 1250,
@@ -15,6 +16,7 @@ export const productsDatabase: Product[] = [
   },
   {
     id: "2",
+    slug_url: "botanical-green-tea-calming-facial-oil-2",
     name: "Botanical Green Tea Calming Facial Oil",
     category: "Serum",
     price: 1100,
@@ -26,6 +28,7 @@ export const productsDatabase: Product[] = [
   },
   {
     id: "3",
+    slug_url: "aura-hydro-boost-ultra-moisturizing-creme-3",
     name: "AURA Hydro-Boost Ultra Moisturizing Creme",
     category: "Cream",
     price: 1350,
@@ -37,6 +40,7 @@ export const productsDatabase: Product[] = [
   },
   {
     id: "4",
+    slug_url: "aeterna-aurum-vitality-anti-aging-ampoule-4",
     name: "AETERNA Aurum Vitality Anti-Aging Ampoule",
     category: "Serum",
     price: 2100,
@@ -49,6 +53,7 @@ export const productsDatabase: Product[] = [
   },
   {
     id: "5",
+    slug_url: "lumina-skin-radiant-c-hyaluronic-serum-5",
     name: "Lumina Skin Radiant C Hyaluronic Serum",
     category: "Serum",
     price: 1450,
@@ -59,6 +64,7 @@ export const productsDatabase: Product[] = [
   },
   {
     id: "6",
+    slug_url: "pure-aura-gentle-hydrating-cleansing-wash-6",
     name: "Pure Aura Gentle Hydrating Cleansing Wash",
     category: "Cleanser",
     price: 950,
@@ -70,6 +76,7 @@ export const productsDatabase: Product[] = [
   },
   {
     id: "7",
+    slug_url: "sun-screen-lotion-spf-50-sun-fluid-7",
     name: "Sun Screen Lotion SPF 50+ Sun Fluid",
     category: "Sunscreen",
     price: 1200,
@@ -81,6 +88,7 @@ export const productsDatabase: Product[] = [
   },
   {
     id: "8",
+    slug_url: "luna-hydrating-crei-creme-rich-moisturizer-8",
     name: "LUNA Hydrating Crei Creme Rich Moisturizer",
     category: "Cream",
     price: 1800,
