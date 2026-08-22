@@ -868,6 +868,7 @@ export default function AddProductClient({
   const router = useRouter();
   const [name, setName] = useState("");
   const [banglaName, setBanglaName] = useState("");
+  const [shortDescription, setShortDescription] = useState("");
   const [description, setDescription] = useState("");
   const [brand, setBrand] = useState("");
   const [customBrand, setCustomBrand] = useState("");
@@ -1358,6 +1359,7 @@ export default function AddProductClient({
     const formData = new FormData();
     formData.append("name", name);
     if (banglaName.trim()) formData.append("bangla_name", banglaName);
+    if (shortDescription.trim()) formData.append("short_description", shortDescription);
     if (description.trim()) formData.append("description", description);
     formData.append("category_id", category);
     if (brand) formData.append("brand_id", brand);
@@ -1571,6 +1573,23 @@ export default function AddProductClient({
                   placeholder="যেমনঃ প্রিমিয়াম এরগনোমিক অফিস চেয়ার" 
                   value={banglaName}
                   onChange={(e) => setBanglaName(e.target.value)}
+                />
+              </div>
+
+              {/* Short Description */}
+              <div className="space-y-2">
+                <Label htmlFor="product-short-desc" className="text-slate-800 font-semibold flex items-center justify-between">
+                  <span>Short Description <span className="text-xs text-slate-400 font-normal">(Optional)</span></span>
+                  <span className="text-xs text-slate-400 font-normal">{shortDescription.length}/1000</span>
+                </Label>
+                <Textarea 
+                  id="product-short-desc"
+                  placeholder="Enter a brief product overview or key summary..." 
+                  value={shortDescription}
+                  maxLength={1000}
+                  rows={2}
+                  onChange={(e) => setShortDescription(e.target.value)}
+                  className="resize-y text-sm"
                 />
               </div>
 

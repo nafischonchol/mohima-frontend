@@ -1018,9 +1018,10 @@ export default function ProductDetailsPage({
                 </div>
 
                 {/* Description Text */}
-                <p className="text-xs sm:text-sm text-[#565656] font-light leading-relaxed">
-                  {metadata.description}
-                </p>
+                <div
+                  className="text-xs sm:text-sm text-[#565656] font-light leading-relaxed space-y-2 [&_p]:mb-2 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_li]:mb-1 [&_strong]:font-semibold [&_strong]:text-[#121212]"
+                  dangerouslySetInnerHTML={{ __html: metadata.description }}
+                />
 
                 {/* Bullet List */}
                 <ol className="list-decimal pl-5 text-xs sm:text-sm text-[#565656] font-light space-y-1">

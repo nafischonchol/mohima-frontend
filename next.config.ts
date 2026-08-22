@@ -5,12 +5,12 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "pub-8fb9df7c2a6544adae22fd17339b5f9a.r2.dev",
+        hostname: "media.mohimaa.shop",
         pathname: "/**",
       },
       {
         protocol: "https",
-        hostname: "*.r2.dev",
+        hostname: "dev.mohimaa.shop",
         pathname: "/**",
       },
     ],

@@ -9,6 +9,7 @@ export interface Product {
   bangla_name?: string | null;
   slug: string;
   slug_url?: string;
+  short_description?: string | null;
   description?: string | null;
   category?: {
     id: number;
