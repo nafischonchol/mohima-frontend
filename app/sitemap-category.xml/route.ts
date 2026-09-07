@@ -33,7 +33,7 @@ export async function GET() {
   const urls = categories
     .map(
       (item) => `  <url>
-    <loc>${escapeXml(`${siteUrl}/catalog?category_id=${item.id}`)}</loc>
+    <loc>${escapeXml(`${siteUrl}/${item.slug}`)}</loc>
     <lastmod>${new Date(item.updated_at).toISOString()}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>

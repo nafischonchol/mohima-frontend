@@ -148,7 +148,7 @@ export function BrandMegaMenu() {
                         {items.map((b) => (
                           <li key={b.id}>
                             <Link
-                              href={`/catalog?brand_id=${b.id}`}
+                              href={`/${b.slug || b.slug_url || b.id}`}
                               className="text-[14px] font-medium text-slate-600 hover:text-rose-500 hover:font-bold transition-colors block"
                             >
                               {b.name}
@@ -172,7 +172,7 @@ export function BrandMegaMenu() {
                 {(displayedBrands.length > 0 ? displayedBrands : brands).map((b) => (
                   <Link
                     key={b.id}
-                    href={`/catalog?brand_id=${b.id}`}
+                    href={`/${b.slug || b.slug_url || b.id}`}
                     className="group/logo flex flex-col items-center justify-center p-2 h-24 relative rounded-xl border border-slate-100 bg-white hover:border-rose-100 hover:bg-rose-50/50 transition-all duration-300 shadow-sm hover:shadow-md"
                   >
                     {b.icon ? (

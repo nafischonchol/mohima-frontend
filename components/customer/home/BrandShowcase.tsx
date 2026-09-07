@@ -62,7 +62,7 @@ export function BrandShowcase() {
                 return (
                   <Link
                     key={b.id}
-                    href={`/catalog?brand_id=${b.id}`}
+                    href={`/${b.slug || b.slug_url || b.id}`}
                     className={`group relative aspect-square sm:aspect-[4/3] rounded-2xl flex flex-col items-center justify-center p-6 transition-all duration-500 border ${colorClass} bg-white/50 dark:bg-slate-900/40 backdrop-blur-sm overflow-hidden`}
                     title={b.name}
                   >

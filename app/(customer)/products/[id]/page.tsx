@@ -748,7 +748,7 @@ export default function ProductDetailsPage({
         <Header />
       </Suspense>
 
-      <main className="flex-1 w-full max-w-7xl mx-auto px-6 py-6 select-none">
+      <main className="flex-1 w-full max-w-7xl mx-auto px-6 py-6">
         {/* Breadcrumb Navigation */}
         <nav className="flex items-center gap-2 text-xs text-[#565656] mb-6 flex-wrap font-medium">
           <Link href="/" className="hover:text-[#CC826A] transition-colors">

@@ -64,13 +64,11 @@ export default function Header() {
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const params = new URLSearchParams(searchParams?.toString());
-    if (searchQuery) {
-      params.set("q", searchQuery);
+    if (searchQuery.trim()) {
+      router.push(`/catalog?search_text=${encodeURIComponent(searchQuery.trim())}`);
     } else {
-      params.delete("q");
+      router.push(`/catalog`);
     }
-    router.push(`${pathname}?${params.toString()}`, { scroll: false });
   };
 
   const onCategoryClick = (category: string | null) => {

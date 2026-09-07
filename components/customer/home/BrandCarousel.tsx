@@ -86,7 +86,7 @@ export function BrandCarousel() {
             return (
               <Link
                 key={b.id}
-                href={`/catalog?brand_id=${b.id}`}
+                href={`/${b.slug || b.slug_url || b.id}`}
                 className={`group relative flex-shrink-0 w-32 h-32 sm:w-40 sm:h-40 rounded-2xl flex flex-col items-center justify-center p-4 sm:p-6 transition-all duration-500 border ${colorClass} bg-white/50 dark:bg-slate-900/40 backdrop-blur-sm overflow-hidden snap-center`}
                 title={b.name}
               >

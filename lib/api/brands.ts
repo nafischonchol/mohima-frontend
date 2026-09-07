@@ -51,7 +51,8 @@ export async function updateBrand(
 export interface PublicBrand {
   id: number;
   name: string;
-  slug_url: string;
+  slug?: string;
+  slug_url?: string;
   icon?: string | null;
   meta_title?: string | null;
   meta_keyword?: string[] | null;

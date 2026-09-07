@@ -60,7 +60,7 @@ export function CategoryMegaMenu() {
                 {categories.map((cat) => (
                   <div key={cat.id}>
                     <Link 
-                      href={`/catalog?category_id=${cat.id}`} 
+                      href={`/${cat.slug || cat.id}`} 
                       className="hover:text-rose-500 hover:font-bold transition-colors block text-[14px] text-slate-600 font-medium whitespace-nowrap"
                     >
                       {cat.name}

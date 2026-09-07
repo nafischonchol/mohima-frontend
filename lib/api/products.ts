@@ -252,9 +252,8 @@ export async function getCategoryProducts(
 export interface ProductFilterParams {
   [key: string]: string | number | boolean | undefined;
   search_text?: string;
-  category_id?: number | string;
-  sub_category_id?: number | string;
-  brand_id?: number | string;
+  category_slug?: string;
+  brand_slug?: string;
   concern_id?: number | string;
   attribute_value_id?: number | string;
   min_price?: number;

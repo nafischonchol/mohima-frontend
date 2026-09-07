@@ -94,8 +94,8 @@ export function MobileSidebar() {
              <div className={`overflow-hidden transition-all duration-300 ease-in-out ${isCategoriesOpen ? 'max-h-[1000px] opacity-100 pb-2' : 'max-h-0 opacity-0'}`}>
                <div className="flex flex-col pl-14 pr-4 py-1 gap-1 bg-slate-50/50 border-y border-slate-100">
                  {categories.length > 0 ? (
-                   categories.map((c) => (
-                     <CategoryLink key={c.id} text={c.name} href={`/catalog?category_id=${c.id}`} onClick={() => setIsOpen(false)} />
+                   categories.map((c: any) => (
+                     <CategoryLink key={c.id} text={c.name} href={`/${c.slug || c.id}`} onClick={() => setIsOpen(false)} />
                    ))
                  ) : (
                    <>
