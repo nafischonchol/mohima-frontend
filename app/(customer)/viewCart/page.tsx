@@ -8,12 +8,8 @@ import {
   Plus,
   Minus,
   ShoppingBag,
-  ArrowLeft,
   Percent,
-  ShieldCheck,
-  Truck,
   CreditCard,
-  Check,
 } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -21,9 +17,6 @@ import CartDrawer from "@/components/CartDrawer";
 import ProductCard from "@/components/ProductCard";
 import { useCart } from "@/context/CartContext";
 import { productsDatabase } from "@/data/products";
-
-const SHIPPING_THRESHOLD = 1500;
-const FLAT_SHIPPING_CHARGE = 60;
 
 export default function ViewCartPage() {
   const {
@@ -74,14 +67,8 @@ export default function ViewCartPage() {
   );
 
   const discountAmount = Math.round((subtotal * discountPercent) / 100);
-  const remainingForFreeShipping = SHIPPING_THRESHOLD - subtotal;
-  const isFreeShipping = remainingForFreeShipping <= 0;
-  const shippingCharge =
-    cart.length === 0 ? 0 : isFreeShipping ? 0 : FLAT_SHIPPING_CHARGE;
-  const estimatedTax = Math.round((subtotal - discountAmount) * 0.05); // 5% VAT
   const total = subtotal - discountAmount;
 
-  const shippingProgress = Math.min((subtotal / SHIPPING_THRESHOLD) * 100, 100);
   const cartTotalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
 
   // Recommendations (Curate other best sellers or related items)
@@ -152,7 +139,9 @@ export default function ViewCartPage() {
                           Premium Skincare
                         </span>
                         <h4 className="text-sm font-semibold tracking-wide text-[#121212] uppercase hover:text-[#CC826A] transition-colors">
-                          <Link href={`/products/${item.slug_url || item.id}`}>{item.name}</Link>
+                          <Link href={`/products/${item.slug_url || item.id}`}>
+                            {item.name}
+                          </Link>
                         </h4>
                         <p className="text-[10px] text-[#565656] uppercase">
                           Authentic Care
@@ -218,35 +207,6 @@ export default function ViewCartPage() {
 
             {/* Right: Checkout & Order Summary panel */}
             <div className="lg:col-span-4 space-y-6 lg:sticky lg:top-24 text-left">
-              {/* Shipping threshold Progress Card */}
-              <div className="bg-white p-5 rounded-2xl border border-black/[0.03] shadow-xs">
-                <p className="text-xs text-[#565656] mb-3 font-semibold">
-                  {remainingForFreeShipping > 0 ? (
-                    <>
-                      Add{" "}
-                      <span className="text-[#CC826A] font-bold">
-                        ৳{remainingForFreeShipping.toLocaleString()}
-                      </span>{" "}
-                      more for <span className="font-bold">FREE shipping</span>
-                    </>
-                  ) : (
-                    <span className="text-emerald-600 font-bold flex items-center gap-1">
-                      <Check size={14} className="stroke-[2.5]" />
-                      You qualify for FREE shipping!
-                    </span>
-                  )}
-                </p>
-                <div className="w-full bg-[#FAF9F6] h-2 rounded-full overflow-hidden mb-2">
-                  <div
-                    className="bg-[#CC826A] h-full rounded-full transition-all duration-500"
-                    style={{ width: `${shippingProgress}%` }}
-                  />
-                </div>
-                <p className="text-[10px] text-[#565656]/60 leading-normal">
-                  Enjoy free delivery all across the country on orders above ৳
-                  {SHIPPING_THRESHOLD.toLocaleString()}.
-                </p>
-              </div>
 
               {/* Summary Card */}
               <div className="bg-white rounded-2xl border border-black/[0.03] p-6 shadow-xs space-y-5">
@@ -335,33 +295,9 @@ export default function ViewCartPage() {
                   className="w-full bg-[#121212] text-[#FAF9F6] text-xs font-bold uppercase tracking-widest py-4.5 rounded-full hover:bg-[#CC826A] transition-colors shadow-md flex items-center justify-center gap-2 cursor-pointer mt-4"
                 >
                   <CreditCard size={14} />
-                  <span>Secure Checkout</span>
+                  <span>Proceed to Checkout</span>
                 </Link>
 
-                {/* Trust Badges */}
-                <div className="grid grid-cols-3 gap-2 pt-4 border-t border-black/[0.04] text-[#565656] text-center">
-                  <div className="flex flex-col items-center gap-1">
-                    <ShieldCheck size={14} className="text-[#CC826A]" />
-                    <span className="text-[8px] font-bold uppercase tracking-wide">
-                      100% Authentic
-                    </span>
-                  </div>
-                  <div className="flex flex-col items-center gap-1">
-                    <Truck size={14} className="text-[#CC826A]" />
-                    <span className="text-[8px] font-bold uppercase tracking-wide">
-                      Secure Delivery
-                    </span>
-                  </div>
-                  <div className="flex flex-col items-center gap-1">
-                    <Check
-                      size={14}
-                      className="text-[#CC826A] border border-[#CC826A] rounded-full p-0.5"
-                    />
-                    <span className="text-[8px] font-bold uppercase tracking-wide">
-                      Easy Returns
-                    </span>
-                  </div>
-                </div>
               </div>
             </div>
           </div>
