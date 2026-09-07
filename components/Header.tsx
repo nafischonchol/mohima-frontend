@@ -32,22 +32,11 @@ const TiktokIcon = (props: React.SVGProps<SVGSVGElement>) => (
   </svg>
 );
 
-const navCategories = [
-  "Skin",
-  "Health & Hygiene",
-  "Body",
-  "Hair",
-  "Mom & Baby",
-  "Oral Care",
-  "Makeup",
-  "Fragrance",
-  "Men",
-  "Accessories",
-  "Supplement",
-];
+import { getPublicCategories, PublicCategory } from "@/lib/api/categories";
 
 export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [navCategories, setNavCategories] = useState<PublicCategory[]>([]);
   const { cart, wishlist, setCartOpen } = useCart();
   const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
   const wishlistCount = wishlist.length;
@@ -57,6 +46,14 @@ export default function Header() {
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const [searchQuery, setSearchQuery] = useState(searchParams?.get("q") || "");
+
+  useEffect(() => {
+    getPublicCategories().then((res) => {
+      if (res.success && Array.isArray(res.resources)) {
+        setNavCategories(res.resources);
+      }
+    });
+  }, []);
 
   useEffect(() => {
     setSearchQuery(searchParams?.get("q") || "");
@@ -72,14 +69,12 @@ export default function Header() {
   };
 
   const onCategoryClick = (category: string | null) => {
-    const params = new URLSearchParams(searchParams?.toString());
     if (category) {
-      params.set("category", category);
-      params.delete("concern");
+      const slug = category.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+      router.push(`/${slug}`);
     } else {
-      params.delete("category");
+      router.push("/catalog");
     }
-    router.push(`${pathname}?${params.toString()}`, { scroll: false });
   };
 
   const onConcernClick = (concern: string | null) => {
@@ -267,20 +262,14 @@ export default function Header() {
         <div className="max-w-7xl mx-auto px-4 md:px-6 flex items-center justify-between overflow-x-auto no-scrollbar py-2">
           {/* Scrollable Categories List */}
           <nav className="flex items-center gap-5 lg:gap-7">
-            {navCategories.map((category) => (
-              <button
-                key={category}
-                onClick={() => {
-                  onCategoryClick(category);
-                  const elem = document.getElementById("products-catalog");
-                  if (elem) {
-                    elem.scrollIntoView({ behavior: "smooth" });
-                  }
-                }}
-                className="text-xs font-bold text-black/70 hover:text-[#e91b5c] tracking-wide uppercase transition-colors whitespace-nowrap cursor-pointer"
+            {navCategories.map((cat) => (
+              <Link
+                key={cat.id}
+                href={`/${cat.slug || cat.id}`}
+                className="text-xs font-bold text-black/70 hover:text-[#e91b5c] tracking-wide uppercase transition-colors whitespace-nowrap"
               >
-                {category}
-              </button>
+                {cat.name}
+              </Link>
             ))}
           </nav>
 
@@ -322,21 +311,15 @@ export default function Header() {
 
             {/* Sidebar Navigation */}
             <nav className="flex flex-col gap-4 text-sm font-bold tracking-wider text-black/85 uppercase overflow-y-auto no-scrollbar flex-1">
-              {navCategories.map((category) => (
-                <button
-                  key={category}
-                  onClick={() => {
-                    onCategoryClick(category);
-                    setMobileMenuOpen(false);
-                    const elem = document.getElementById("products-catalog");
-                    if (elem) {
-                      elem.scrollIntoView({ behavior: "smooth" });
-                    }
-                  }}
+              {navCategories.map((cat) => (
+                <Link
+                  key={cat.id}
+                  href={`/${cat.slug || cat.id}`}
+                  onClick={() => setMobileMenuOpen(false)}
                   className="text-left py-2 border-b border-black/[0.02] hover:text-[#e91b5c] transition-colors"
                 >
-                  {category}
-                </button>
+                  {cat.name}
+                </Link>
               ))}
               
               {/* Additional Sidebar Links */}

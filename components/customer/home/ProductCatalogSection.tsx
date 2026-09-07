@@ -144,15 +144,18 @@ export function ProductCatalogSection({ initialProducts = [], defaultSortBy }: P
         per_page: 20,
       });
 
-      if (res.success && Array.isArray(res.resources)) {
-        const formatted = formatProducts(res.resources);
+      if (res.success && res.resources) {
+        const rawProducts = Array.isArray(res.resources)
+          ? res.resources
+          : (res.resources as any)?.products || (res.resources as any)?.items || [];
+        const formatted = formatProducts(rawProducts);
         if (isLoadMore) {
           setProductsList((prev) => [...prev, ...formatted]);
         } else {
           setProductsList(formatted);
         }
         setPage(targetPage);
-        if (res.resources.length < 20 || (res.pagination && res.pagination.current_page >= res.pagination.last_page)) {
+        if (rawProducts.length < 20 || (res.pagination && res.pagination.current_page >= res.pagination.last_page)) {
           setHasMore(false);
         } else {
           setHasMore(true);

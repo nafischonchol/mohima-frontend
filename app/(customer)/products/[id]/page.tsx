@@ -407,14 +407,58 @@ export default function ProductDetailsPage({
     return () => { isMounted = false; };
   }, [id]);
 
-  // Page title dynamic setup
+  // Page title dynamic setup and SEO head tags sync
   useEffect(() => {
-    if (product) {
-      document.title = `${product.name} | Mohima Premium Beauty`;
-    } else if (isNotFound) {
-      document.title = "Product Not Found | Mohima Premium Beauty";
+    if (typeof document === "undefined") return;
+    const pageTitle = product ? `${product.name} | Mohima Premium Beauty` : isNotFound ? "Product Not Found | Mohima Premium Beauty" : "Mohima Premium Beauty";
+    document.title = pageTitle;
+
+    const canonicalUrl = `${window.location.origin}/products/${id}`;
+    const pageDesc = product?.description || "Explore authentic K-Beauty and luxury skincare at Mohima.";
+    const rawImg = product?.thumbnail || product?.image;
+    const ogImg = rawImg
+      ? (rawImg.startsWith("http") ? rawImg : `${window.location.origin}${rawImg}`)
+      : `${window.location.origin}/images/hero_banner_1.png`;
+
+    const setMetaTag = (attrName: string, attrValue: string, content: string) => {
+      let element = document.querySelector<HTMLMetaElement>(`meta[${attrName}='${attrValue}']`);
+      if (!element) {
+        element = document.createElement("meta");
+        element.setAttribute(attrName, attrValue);
+        document.head.appendChild(element);
+      }
+      element.setAttribute("content", content);
+    };
+
+    // Canonical link tag
+    let link = document.querySelector<HTMLLinkElement>("link[rel='canonical']");
+    if (!link) {
+      link = document.createElement("link");
+      link.setAttribute("rel", "canonical");
+      document.head.appendChild(link);
     }
-  }, [product, isNotFound]);
+    link.setAttribute("href", canonicalUrl);
+
+    // Robots meta tag
+    setMetaTag("name", "robots", isNotFound ? "noindex, nofollow" : "index, follow");
+
+    // Description meta tag
+    setMetaTag("name", "description", pageDesc);
+
+    // Open Graph meta tags
+    setMetaTag("property", "og:title", pageTitle);
+    setMetaTag("property", "og:description", pageDesc);
+    setMetaTag("property", "og:url", canonicalUrl);
+    setMetaTag("property", "og:site_name", "Mohima Premium Beauty");
+    setMetaTag("property", "og:type", "product");
+    setMetaTag("property", "og:image", ogImg);
+
+    // Twitter meta tags
+    setMetaTag("name", "twitter:card", "summary_large_image");
+    setMetaTag("name", "twitter:title", pageTitle);
+    setMetaTag("name", "twitter:description", pageDesc);
+    setMetaTag("name", "twitter:image", ogImg);
+  }, [product, isNotFound, id]);
 
   // UI States
   const [quantity, setQuantity] = useState(1);

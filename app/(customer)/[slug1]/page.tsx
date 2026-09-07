@@ -1,11 +1,76 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import CatalogFilterClient from "@/components/CatalogFilterClient";
-import { getFilterableData } from "@/lib/api/products";
+import { getFilterableData, filterProducts } from "@/lib/api/products";
 
 interface SingleSlugPageProps {
   params: Promise<{
     slug1: string;
   }>;
+}
+
+export async function generateMetadata({ params }: SingleSlugPageProps): Promise<Metadata> {
+  const { slug1 } = await params;
+  if (!slug1) return {};
+
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://mohimaa.com";
+  const canonicalUrl = `${siteUrl}/${slug1}`;
+  const defaultOgImage = `${siteUrl}/images/hero_banner_1.png`;
+
+  const res = await filterProducts({ category_slug: slug1, per_page: 1 });
+  let seo = (res as any)?.resources?.seo || (res as any)?.seo;
+
+  if (!seo) {
+    const resBrand = await filterProducts({ brand_slug: slug1, per_page: 1 });
+    seo = (resBrand as any)?.resources?.seo || (resBrand as any)?.seo;
+  }
+
+  const title = seo?.meta_title || seo?.name || slug1;
+  const description = seo?.meta_description || `Discover authentic ${title} products at Mohima Premium Beauty.`;
+  const keywords = seo?.meta_keyword
+    ? Array.isArray(seo.meta_keyword)
+      ? seo.meta_keyword.join(", ")
+      : seo.meta_keyword
+    : undefined;
+
+  const rawImg = seo?.meta_image;
+  const ogImageUrl = rawImg
+    ? (rawImg.startsWith("http") ? rawImg : `${siteUrl}${rawImg}`)
+    : defaultOgImage;
+
+  return {
+    title,
+    description,
+    keywords,
+    alternates: {
+      canonical: canonicalUrl,
+    },
+    robots: {
+      index: true,
+      follow: true,
+    },
+    openGraph: {
+      title,
+      description,
+      url: canonicalUrl,
+      siteName: "Mohima Premium Beauty",
+      type: "website",
+      images: [
+        {
+          url: ogImageUrl,
+          width: 1200,
+          height: 630,
+          alt: title,
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: [ogImageUrl],
+    },
+  };
 }
 
 export default async function SingleSlugPage({ params }: SingleSlugPageProps) {

@@ -10,7 +10,7 @@ import {
   Flower2,
   Box,
 } from "lucide-react";
-import { useRouter, useSearchParams, usePathname } from "next/navigation";
+import Link from "next/link";
 import { getPopularCategories } from "@/lib/api/categories";
 
 interface Category {
@@ -38,21 +38,6 @@ const getCategoryIcon = (slug?: string) => {
 };
 
 export default function CategoryGrid() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const pathname = usePathname();
-  const selectedCategory = searchParams?.get("category");
-
-  const onCategoryClick = (category: string | null) => {
-    const params = new URLSearchParams(searchParams?.toString());
-    if (category) {
-      params.set("category", category);
-      params.delete("concern");
-    } else {
-      params.delete("category");
-    }
-    router.push(`${pathname}?${params.toString()}`, { scroll: false });
-  };
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -92,27 +77,18 @@ export default function CategoryGrid() {
           </div>
         ) : (
           categories.map((cat) => {
-            const catIdStr = cat.id.toString();
-            const isSelected = selectedCategory === catIdStr;
+            const href = `/${cat.slug || cat.id}`;
             return (
-              <button
+              <Link
                 key={cat.id}
-                onClick={() => onCategoryClick(isSelected ? null : catIdStr)}
+                href={href}
                 className="flex flex-col items-center group cursor-pointer"
               >
                 {/* Circular Container */}
                 <div
-                  className={`w-20 h-20 sm:w-24 sm:h-24 rounded-full flex items-center justify-center transition-all duration-350 ${
-                    isSelected
-                      ? "bg-[#CC826A] text-[#FAF9F6] border-none shadow-md"
-                      : "bg-white hover:bg-[#FAF9F6] border border-[#E5E5E5] group-hover:border-[#CC826A] group-hover:scale-105"
-                  }`}
+                  className="w-20 h-20 sm:w-24 sm:h-24 rounded-full flex items-center justify-center transition-all duration-350 bg-white hover:bg-[#FAF9F6] border border-[#E5E5E5] group-hover:border-[#CC826A] group-hover:scale-105 shadow-xs"
                 >
-                  <div
-                    className={`transition-colors duration-350 ${
-                      isSelected ? "[&_svg]:text-white" : ""
-                    }`}
-                  >
+                  <div>
                     {cat.icon ? (
                       <img
                         src={cat.icon}
@@ -127,13 +103,11 @@ export default function CategoryGrid() {
 
                 {/* Text details */}
                 <span
-                  className={`text-xs font-semibold tracking-wider text-[#121212] mt-4 text-center transition-colors ${
-                    isSelected ? "text-[#CC826A]" : "group-hover:text-[#CC826A]"
-                  }`}
+                  className="text-xs font-semibold tracking-wider text-[#121212] mt-4 text-center transition-colors group-hover:text-[#CC826A]"
                 >
                   {cat.name}
                 </span>
-              </button>
+              </Link>
             );
           })
         )}

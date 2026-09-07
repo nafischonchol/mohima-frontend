@@ -34,6 +34,7 @@ export function CatalogFilterClientContent({
   const categorySlugParam = initialCategorySlug || searchParams.get("category_slug") || "";
   const brandSlugParam = initialBrandSlug || searchParams.get("brand_slug") || "";
   const concernIdParam = searchParams.get("concern_id") || "";
+  const attrValParam = searchParams.get("attribute_value_id") || "";
   const searchTextParam = searchParams.get("search_text") || searchParams.get("q") || "";
   const minPriceParam = searchParams.get("min_price") || "";
   const maxPriceParam = searchParams.get("max_price") || "";
@@ -48,23 +49,27 @@ export function CatalogFilterClientContent({
   const [selectedCategorySlug, setSelectedCategorySlug] = useState<string>(categorySlugParam);
   const [selectedBrandSlug, setSelectedBrandSlug] = useState<string>(brandSlugParam);
   const [selectedConcern, setSelectedConcern] = useState<string>(concernIdParam);
+  const [selectedAttrValues, setSelectedAttrValues] = useState<string[]>(
+    attrValParam ? attrValParam.split(",").filter(Boolean) : []
+  );
   const [minPrice, setMinPrice] = useState<string>(minPriceParam);
   const [maxPrice, setMaxPrice] = useState<string>(maxPriceParam);
   const [inStockOnly, setInStockOnly] = useState<boolean>(isStockParam === "true" || isStockParam === "1");
   const [sortBy, setSortBy] = useState<string>(sortByParam);
   const [searchText, setSearchText] = useState<string>(searchTextParam);
 
-  // Products state & pagination
+  // Products state & pagination & SEO data
   const [products, setProducts] = useState<any[]>([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
   const [pagination, setPagination] = useState<any>(null);
+  const [seoData, setSeoData] = useState<any>(null);
   const [currentPage, setCurrentPage] = useState(1);
 
   // Mobile filter drawer toggle
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
 
   // Accordion toggle states
-  const [openSections, setOpenSections] = useState({
+  const [openSections, setOpenSections] = useState<Record<string, boolean>>({
     categories: true,
     brands: true,
     concerns: true,
@@ -76,6 +81,8 @@ export function CatalogFilterClientContent({
     setSelectedCategorySlug(initialCategorySlug || searchParams.get("category_slug") || "");
     setSelectedBrandSlug(initialBrandSlug || searchParams.get("brand_slug") || "");
     setSelectedConcern(searchParams.get("concern_id") || "");
+    const attrParam = searchParams.get("attribute_value_id") || "";
+    setSelectedAttrValues(attrParam ? attrParam.split(",").filter(Boolean) : []);
     setMinPrice(searchParams.get("min_price") || "");
     setMaxPrice(searchParams.get("max_price") || "");
     const stock = searchParams.get("is_stock");
@@ -108,6 +115,7 @@ export function CatalogFilterClientContent({
         category_slug: selectedCategorySlug || undefined,
         brand_slug: selectedBrandSlug || undefined,
         concern_id: selectedConcern || undefined,
+        attribute_value_id: selectedAttrValues.length > 0 ? selectedAttrValues.join(",") : undefined,
         min_price: minPrice ? Number(minPrice) : undefined,
         max_price: maxPrice ? Number(maxPrice) : undefined,
         is_stock: inStockOnly ? 1 : undefined,
@@ -117,7 +125,21 @@ export function CatalogFilterClientContent({
       });
 
       if (res && res.success && res.resources) {
-        const mappedProducts = res.resources.map((item: any) => {
+        const rawSeo = (res as any)?.resources?.seo || (res as any)?.seo;
+        if (rawSeo) {
+          setSeoData(rawSeo);
+          if (typeof document !== "undefined" && (rawSeo.meta_title || rawSeo.title || rawSeo.name)) {
+            document.title = rawSeo.meta_title || rawSeo.title || rawSeo.name;
+          }
+        } else {
+          setSeoData(null);
+        }
+
+        const rawProducts = Array.isArray(res.resources)
+          ? res.resources
+          : (res.resources as any)?.products || (res.resources as any)?.items || [];
+
+        const mappedProducts = rawProducts.map((item: any) => {
           const price =
             item.discount_price ||
             item.min_discount_price ||
@@ -149,6 +171,7 @@ export function CatalogFilterClientContent({
       } else {
         setProducts([]);
         setPagination(null);
+        setSeoData(null);
       }
       setLoadingProducts(false);
     }
@@ -158,6 +181,7 @@ export function CatalogFilterClientContent({
     selectedCategorySlug,
     selectedBrandSlug,
     selectedConcern,
+    selectedAttrValues,
     minPrice,
     maxPrice,
     inStockOnly,
@@ -165,6 +189,67 @@ export function CatalogFilterClientContent({
     searchText,
     currentPage,
   ]);
+
+  // Sync canonical tag, robots tag, meta description, Open Graph, and Twitter tags in document head dynamically
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+
+    let path = "/catalog";
+    if (selectedCategorySlug && selectedBrandSlug) {
+      path = `/${selectedCategorySlug}/${selectedBrandSlug}`;
+    } else if (selectedCategorySlug) {
+      path = `/${selectedCategorySlug}`;
+    } else if (selectedBrandSlug) {
+      path = `/${selectedBrandSlug}`;
+    }
+
+    const canonicalUrl = `${window.location.origin}${path}`;
+    const pageTitle = document.title || "Mohima Premium Beauty";
+    const pageDesc = seoData?.meta_description || "Discover curated authentic Korean beauty and luxury skincare products.";
+    const rawImg = seoData?.meta_image;
+    const ogImg = rawImg
+      ? (rawImg.startsWith("http") ? rawImg : `${window.location.origin}${rawImg}`)
+      : `${window.location.origin}/images/hero_banner_1.png`;
+
+    const setMetaTag = (attrName: string, attrValue: string, content: string) => {
+      let element = document.querySelector<HTMLMetaElement>(`meta[${attrName}='${attrValue}']`);
+      if (!element) {
+        element = document.createElement("meta");
+        element.setAttribute(attrName, attrValue);
+        document.head.appendChild(element);
+      }
+      element.setAttribute("content", content);
+    };
+
+    // Canonical link tag
+    let link = document.querySelector<HTMLLinkElement>("link[rel='canonical']");
+    if (!link) {
+      link = document.createElement("link");
+      link.setAttribute("rel", "canonical");
+      document.head.appendChild(link);
+    }
+    link.setAttribute("href", canonicalUrl);
+
+    // Robots meta tag
+    setMetaTag("name", "robots", "index, follow");
+
+    // Description meta tag
+    setMetaTag("name", "description", pageDesc);
+
+    // Open Graph meta tags
+    setMetaTag("property", "og:title", pageTitle);
+    setMetaTag("property", "og:description", pageDesc);
+    setMetaTag("property", "og:url", canonicalUrl);
+    setMetaTag("property", "og:site_name", "Mohima Premium Beauty");
+    setMetaTag("property", "og:type", "website");
+    setMetaTag("property", "og:image", ogImg);
+
+    // Twitter meta tags
+    setMetaTag("name", "twitter:card", "summary_large_image");
+    setMetaTag("name", "twitter:title", pageTitle);
+    setMetaTag("name", "twitter:description", pageDesc);
+    setMetaTag("name", "twitter:image", ogImg);
+  }, [selectedCategorySlug, selectedBrandSlug, seoData]);
 
   // Construct updated URL and update browser history
   const updateUrl = (updatedState: {
@@ -176,6 +261,7 @@ export function CatalogFilterClientContent({
     stock?: boolean;
     sort?: string;
     concern?: string;
+    attrVals?: string;
   }) => {
     const catSlug = updatedState.categorySlug !== undefined ? updatedState.categorySlug : selectedCategorySlug;
     const brSlug = updatedState.brandSlug !== undefined ? updatedState.brandSlug : selectedBrandSlug;
@@ -185,6 +271,7 @@ export function CatalogFilterClientContent({
     const stock = updatedState.stock !== undefined ? updatedState.stock : inStockOnly;
     const sort = updatedState.sort !== undefined ? updatedState.sort : sortBy;
     const concern = updatedState.concern !== undefined ? updatedState.concern : selectedConcern;
+    const attrVals = updatedState.attrVals !== undefined ? updatedState.attrVals : selectedAttrValues.join(",");
 
     // Path calculation
     let basePath = "/catalog";
@@ -204,6 +291,7 @@ export function CatalogFilterClientContent({
     if (stock) queryParams.set("is_stock", "true");
     if (sort && sort !== "latest") queryParams.set("sort_by", sort);
     if (concern) queryParams.set("concern_id", concern);
+    if (attrVals) queryParams.set("attribute_value_id", attrVals);
 
     const queryString = queryParams.toString();
     const finalUrl = queryString ? `${basePath}?${queryString}` : basePath;
@@ -224,11 +312,14 @@ export function CatalogFilterClientContent({
     updateUrl({ brandSlug: nextSlug });
   };
 
-  const handleConcernSelect = (id: string) => {
-    const nextConcern = selectedConcern === id ? "" : id;
-    setSelectedConcern(nextConcern);
+  const handleAttributeValueSelect = (id: string) => {
+    const exists = selectedAttrValues.includes(id);
+    const updated = exists
+      ? selectedAttrValues.filter((v) => v !== id)
+      : [...selectedAttrValues, id];
+    setSelectedAttrValues(updated);
     setCurrentPage(1);
-    updateUrl({ concern: nextConcern });
+    updateUrl({ attrVals: updated.join(",") });
   };
 
   const handlePriceApply = () => {
@@ -254,6 +345,7 @@ export function CatalogFilterClientContent({
     setSelectedCategorySlug("");
     setSelectedBrandSlug("");
     setSelectedConcern("");
+    setSelectedAttrValues([]);
     setMinPrice("");
     setMaxPrice("");
     setInStockOnly(false);
@@ -263,14 +355,15 @@ export function CatalogFilterClientContent({
     router.push("/catalog");
   };
 
-  const toggleSection = (section: keyof typeof openSections) => {
-    setOpenSections((prev) => ({ ...prev, [section]: !prev[section] }));
+  const toggleSection = (section: string) => {
+    setOpenSections((prev) => ({ ...prev, [section]: !(prev[section] ?? true) }));
   };
 
   const activeFiltersCount =
     (selectedCategorySlug ? 1 : 0) +
     (selectedBrandSlug ? 1 : 0) +
     (selectedConcern ? 1 : 0) +
+    selectedAttrValues.length +
     (minPrice || maxPrice ? 1 : 0) +
     (inStockOnly ? 1 : 0) +
     (searchText ? 1 : 0);
@@ -313,7 +406,9 @@ export function CatalogFilterClientContent({
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-[#E5E5E5] pb-4 mb-6 gap-4">
           <div>
             <h1 className="font-serif text-2xl sm:text-3xl font-semibold text-[#121212]">
-              {activeCategoryObj && activeBrandObj
+              {seoData?.name
+                ? seoData.name
+                : activeCategoryObj && activeBrandObj
                 ? `${activeCategoryObj.name} - ${activeBrandObj.name}`
                 : activeCategoryObj
                 ? activeCategoryObj.name
@@ -322,7 +417,9 @@ export function CatalogFilterClientContent({
                 : "All Products"}
             </h1>
             <p className="text-xs text-[#565656] mt-1">
-              {pagination?.total !== undefined
+              {seoData?.meta_description
+                ? seoData.meta_description
+                : pagination?.total !== undefined
                 ? `${pagination.total} products available`
                 : "Discover our curated collection"}
             </p>
@@ -480,7 +577,53 @@ export function CatalogFilterClientContent({
                   )}
                 </div>
 
-                {/* 3. Price Range */}
+                {/* 3. Dynamic Attributes Filters */}
+                {filterData?.attributes && filterData.attributes.length > 0 && (
+                  filterData.attributes.map((attr) => {
+                    const sectionKey = `attr_${attr.id}`;
+                    const isOpen = openSections[sectionKey] ?? true;
+                    return (
+                      <div key={attr.id} className="border-b border-black/[0.06] pb-4">
+                        <button
+                          onClick={() => toggleSection(sectionKey)}
+                          className="flex items-center justify-between w-full text-xs font-bold uppercase tracking-wider text-[#121212] py-1"
+                        >
+                          <span>{attr.name}</span>
+                          <ChevronDown
+                            size={14}
+                            className={`transition-transform duration-200 ${
+                              isOpen ? "rotate-180" : ""
+                            }`}
+                          />
+                        </button>
+                        {isOpen && attr.attribute_values && attr.attribute_values.length > 0 && (
+                          <div className="mt-3 space-y-1 max-h-52 overflow-y-auto">
+                            {attr.attribute_values.map((val) => {
+                              const valIdStr = String(val.id);
+                              const isSelected = selectedAttrValues.includes(valIdStr);
+                              return (
+                                <button
+                                  key={val.id}
+                                  onClick={() => handleAttributeValueSelect(valIdStr)}
+                                  className={`flex items-center justify-between w-full text-xs py-1.5 px-2 rounded-lg transition-colors text-left font-medium ${
+                                    isSelected
+                                      ? "bg-[#CC826A]/10 text-[#CC826A] font-bold"
+                                      : "text-[#565656] hover:bg-black/5 hover:text-[#121212]"
+                                  }`}
+                                >
+                                  <span>{val.value}</span>
+                                  {isSelected && <Check size={12} className="text-[#CC826A]" />}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })
+                )}
+
+                {/* 4. Price Range */}
                 <div className="border-b border-black/[0.06] pb-4">
                   <button
                     onClick={() => toggleSection("price")}
@@ -523,7 +666,7 @@ export function CatalogFilterClientContent({
                   )}
                 </div>
 
-                {/* 4. Stock Status Toggle */}
+                {/* 5. Stock Status Toggle */}
                 <div className="pt-1">
                   <label className="flex items-center gap-2 cursor-pointer text-xs font-semibold text-[#121212]">
                     <input
@@ -565,6 +708,23 @@ export function CatalogFilterClientContent({
                     />
                   </span>
                 )}
+                {selectedAttrValues.map((valId) => {
+                  let chipLabel = valId;
+                  filterData?.attributes?.forEach((attr) => {
+                    const found = attr.attribute_values?.find((v) => String(v.id) === valId);
+                    if (found) chipLabel = `${attr.name}: ${found.value}`;
+                  });
+                  return (
+                    <span key={valId} className="inline-flex items-center gap-1 px-2.5 py-1 bg-[#CC826A]/10 text-[#CC826A] rounded-full text-xs font-medium">
+                      {chipLabel}
+                      <X
+                        size={12}
+                        className="cursor-pointer hover:text-black"
+                        onClick={() => handleAttributeValueSelect(valId)}
+                      />
+                    </span>
+                  );
+                })}
                 {searchText && (
                   <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-[#CC826A]/10 text-[#CC826A] rounded-full text-xs font-medium">
                     Search: "{searchText}"
@@ -737,6 +897,36 @@ export function CatalogFilterClientContent({
                     ))}
                   </div>
                 </div>
+
+                {/* Attributes for Mobile */}
+                {filterData?.attributes && filterData.attributes.length > 0 && (
+                  filterData.attributes.map((attr) => (
+                    <div key={attr.id}>
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-[#121212] mb-2">
+                        {attr.name}
+                      </h4>
+                      <div className="space-y-1 max-h-40 overflow-y-auto">
+                        {attr.attribute_values?.map((val) => {
+                          const valIdStr = String(val.id);
+                          const isSelected = selectedAttrValues.includes(valIdStr);
+                          return (
+                            <button
+                              key={val.id}
+                              onClick={() => handleAttributeValueSelect(valIdStr)}
+                              className={`block w-full text-left text-xs py-1.5 px-2 rounded ${
+                                isSelected
+                                  ? "bg-[#CC826A]/10 text-[#CC826A] font-bold"
+                                  : "text-[#565656]"
+                              }`}
+                            >
+                              {val.value}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))
+                )}
 
                 {/* Price */}
                 <div>
