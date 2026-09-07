@@ -730,7 +730,7 @@ export default function ProductDetailsPage({
               Back to Home
             </Link>
             <Link
-              href="/products"
+              href="/catalog"
               className="px-6 py-3 bg-white border border-[#121212]/15 text-[#121212] text-xs font-semibold tracking-wider uppercase rounded-full hover:bg-gray-50 transition-all shadow-xs"
             >
               Browse All Products
@@ -755,7 +755,7 @@ export default function ProductDetailsPage({
             Home
           </Link>
           <ChevronRight size={12} className="text-[#565656]/50 shrink-0" />
-          <Link href="/products" className="hover:text-[#CC826A] transition-colors">
+          <Link href="/catalog" className="hover:text-[#CC826A] transition-colors">
             Products
           </Link>
           {product?.category?.breadcrumbs && Array.isArray(product.category.breadcrumbs) && product.category.breadcrumbs.length > 0 ? (
@@ -763,7 +763,7 @@ export default function ProductDetailsPage({
               <React.Fragment key={crumb.id || crumb.slug}>
                 <ChevronRight size={12} className="text-[#565656]/50 shrink-0" />
                 <Link
-                  href={`/products?category_id=${crumb.id}`}
+                  href={crumb.slug ? `/${crumb.slug}` : `/catalog?category_id=${crumb.id}`}
                   className="hover:text-[#CC826A] transition-colors"
                 >
                   {crumb.name}
@@ -774,7 +774,7 @@ export default function ProductDetailsPage({
             <>
               <ChevronRight size={12} className="text-[#565656]/50 shrink-0" />
               <Link
-                href={`/products?category_id=${product.category.id}`}
+                href={typeof product.category === 'object' && product.category.slug ? `/${product.category.slug}` : typeof product.category === 'object' && product.category.id ? `/catalog?category_id=${product.category.id}` : `/catalog`}
                 className="hover:text-[#CC826A] transition-colors"
               >
                 {typeof product.category === 'object' ? product.category.name : product.category}

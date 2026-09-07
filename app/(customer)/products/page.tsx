@@ -1,5 +1,0 @@
-import CatalogFilterClient from "@/components/CatalogFilterClient";
-
-export default function ProductsPage() {
-  return <CatalogFilterClient />;
-}

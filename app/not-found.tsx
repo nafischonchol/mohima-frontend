@@ -46,7 +46,7 @@ export default function NotFound() {
                 হোমপেজে ফিরে যান
               </Link>
               <Link
-                href="/products"
+                href="/catalog"
                 className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-full bg-white hover:bg-black/5 text-[#121212] border border-black/10 font-bold text-xs uppercase tracking-widest transition-colors duration-300 shadow-sm cursor-pointer"
               >
                 <ShoppingBag className="w-4 h-4 text-[#CC826A]" />
